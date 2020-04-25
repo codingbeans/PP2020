@@ -104,27 +104,33 @@ particle_soa create_particle_soa(int n)
   return res;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-  std::size_t n, run_time;
-  std::cin >> n >> run_time;
+  if (argc < 3) {
+    std::cout << "Usage: ./aos ${data_size} ${repeat_time}\n";
+    return 0;
+  }
+  std::size_t data_size, repeat_time;
+  // std::cin >> n >> run_time;
+  data_size = std::stoi(argv[1]);
+  repeat_time = std::stoi(argv[2]);
   double time_avg = 0;
 
   std::cout<<"n;soa"<<std::endl;
     
-  for(std::size_t i=0;i<run_time;i+=1) {
-    std::cout<<n<<";";
+  for(std::size_t i=0;i<repeat_time;i+=1) {
+    std::cout<<data_size<<";";
     {
-      auto ps=create_particle_aos(n);
-      double now_time = measure(n,[&](){
+      auto ps=create_particle_aos(data_size);
+      double now_time = measure(data_size,[&](){
         long int res=0;
-        for(std::size_t i=0;i<n;++i)res+=ps[i].x+ps[i].y+ps[i].z;
+        for(std::size_t i=0;i<data_size;++i)res+=ps[i].x+ps[i].y+ps[i].z;
         return res;
       });
       time_avg += now_time;
       std::cout << now_time << "\n";
     }
   }
-  time_avg /= run_time;
+  time_avg /= repeat_time;
   std::cout << "Avg: " << time_avg << "\n";
 }
