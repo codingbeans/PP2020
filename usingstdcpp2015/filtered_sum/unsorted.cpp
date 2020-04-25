@@ -66,7 +66,7 @@ void resume_timing()
 int main(int argc, char* argv[])
 {
   if (argc < 3) {
-    std::cout << "Usage: ./sorted ${data_size} ${repeat_time}\n";
+    std::cout << "Usage: ./unsorted ${data_size} ${repeat_time}\n";
     return 0;
   }
   std::size_t data_size, repeat_time;
