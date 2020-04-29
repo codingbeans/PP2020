@@ -3,7 +3,7 @@
 #include "matrix.h"
 
 void multiply(int N, unsigned long A[][2048], unsigned long B[][2048], unsigned long C[][2048]) {
-    omp_set_num_threads(4);
+    // omp_set_num_threads(6);
 #pragma omp parallel for
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
