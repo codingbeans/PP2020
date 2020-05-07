@@ -1,9 +1,9 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<omp.h>
-
+ 
 #define maxN 18
-
+ 
 int N;
 char position[maxN][maxN];
 void printPlacedCol(int placedCol[]) {
@@ -24,7 +24,7 @@ int conflict(int placedCol[], int row, int col) {
     }
     return 0;
 }
-
+ 
 int solve(int placedCol[], int row) {
     // printf("solve(%d)\n", row);
     // printPlacedCol(placedCol);
@@ -38,7 +38,7 @@ int solve(int placedCol[], int row) {
     }
     return ans;
 }
-
+ 
 int placedCol[maxN];
 int main() {
     int tc = 1;
@@ -47,7 +47,7 @@ int main() {
             scanf("%s", position[i]);
         }
         int ans = 0;
-        #pragma omp parallel for num_threads(1024) collapse(3) private(placedCol) reduction(+ : ans)
+        #pragma omp parallel for collapse(3) private(placedCol) reduction(+ : ans) schedule(dynamic)
         for (int i=0; i<N; i++) {
             for (int j=0; j<N; j++) {
                 for (int k=0; k< N; k++) {
