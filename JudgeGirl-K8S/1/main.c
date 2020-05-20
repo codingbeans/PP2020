@@ -3,9 +3,11 @@
 #include <stdlib.h>
 
 #define MAX_FILENAME_LENGTH 30 + 5
-#define MAX_PROGRAM_LENGTH 300000 + 5
+#define MAX_PROGRAM_LENGTH 3000 + 5
+#define MAX_LOG_LENGTH 3000 + 5
 
 char program_chars[MAX_PROGRAM_LENGTH];
+char program_log[MAX_LOG_LENGTH];
 
 cl_program load_program(cl_context context, cl_device_id device_id, const char* filename)
 {
@@ -32,8 +34,8 @@ cl_program load_program(cl_context context, cl_device_id device_id, const char* 
     cl_int ret = clBuildProgram(program, 0, 0, 0, 0, 0);
     size_t len = 0;
     clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &len);
-    char *buffer = calloc(len, sizeof(char));
-    clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, len, buffer, NULL);
+    clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, len, program_log, NULL);
+    program_log[len] = '\0';
     if(ret != CL_SUCCESS) {
         printf("%s", buffer);
         return 0;
@@ -43,130 +45,127 @@ cl_program load_program(cl_context context, cl_device_id device_id, const char* 
 }
 
 char filename[MAX_FILENAME_LENGTH];
+cl_platform_id platforms[num];
 int main() {
-    scanf("%s", filename);
+    while(scanf("%s", filename) != EOF) {
+        cl_int err;
+        cl_uint num;
+        err = clGetPlatformIDs(0, 0, &num);
+        if(err != CL_SUCCESS) {
+            printf("Unable to get platforms\n");
+            return 0;
+        }
 
-    cl_int err;
-    cl_uint num;
-    err = clGetPlatformIDs(0, 0, &num);
-    if(err != CL_SUCCESS) {
-        printf("Unable to get platforms\n");
-        return 0;
-    }
+        err = clGetPlatformIDs(num, &platforms[0], &num);
+        if(err != CL_SUCCESS) {
+            printf("Unable to get platform ID\n");
+            return 0;
+        }
 
-    cl_platform_id platforms[num];
-    err = clGetPlatformIDs(num, &platforms[0], &num);
-    if(err != CL_SUCCESS) {
-        printf("Unable to get platform ID\n");
-        return 0;
-    }
+        cl_context_properties prop[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platforms[0], 0 };
+        cl_context context = clCreateContextFromType(prop, CL_DEVICE_TYPE_DEFAULT, NULL, NULL, NULL);
+        if(context == 0) {
+            printf("Can't create OpenCL context\n");
+            return 0;
+        }
 
-    cl_context_properties prop[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platforms[0], 0 };
-    cl_context context = clCreateContextFromType(prop, CL_DEVICE_TYPE_DEFAULT, NULL, NULL, NULL);
-    if(context == 0) {
-        printf("Can't create OpenCL context\n");
-        return 0;
-    }
+        size_t cb;
+        clGetContextInfo(context, CL_CONTEXT_DEVICES, 0, NULL, &cb);
+        cl_device_id devices[cb / sizeof(cl_device_id)];
+        clGetContextInfo(context, CL_CONTEXT_DEVICES, cb, &devices[0], 0);
 
-    size_t cb;
-    clGetContextInfo(context, CL_CONTEXT_DEVICES, 0, NULL, &cb);
-    cl_device_id devices[cb / sizeof(cl_device_id)];
-    clGetContextInfo(context, CL_CONTEXT_DEVICES, cb, &devices[0], 0);
+        // clGetDeviceInfo(devices[0], CL_DEVICE_NAME, 0, NULL, &cb);
+        // char devname[cb];
+        // clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
+        // devname[cb] = '\0';
+        // printf("Device: %s \n", devname);
 
-    // clGetDeviceInfo(devices[0], CL_DEVICE_NAME, 0, NULL, &cb);
-    // char devname[cb];
-    // clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
-    // devname[cb] = '\0';
-    // printf("Device: %s \n", devname);
+        // cl_command_queue queue = clCreateCommandQueueWithProperties(context, devices[0], 0, 0);
+        // if(queue == 0) {
+        //     printf("Can't create command queue\n");
+        //     clReleaseContext(context);
+        //     return 0;
+        // }
 
-    // cl_command_queue queue = clCreateCommandQueueWithProperties(context, devices[0], 0, 0);
-    // if(queue == 0) {
-    //     printf("Can't create command queue\n");
-    //     clReleaseContext(context);
-    //     return 0;
-    // }
+        // const int DATA_SIZE = 1048;
+        // float a[DATA_SIZE], b[DATA_SIZE], res[DATA_SIZE];
+        // for(int i = 0; i < DATA_SIZE; i++) {
+        //     a[i] = rand();
+        //     b[i] = rand();
+        // }
 
-    // const int DATA_SIZE = 1048;
-    // float a[DATA_SIZE], b[DATA_SIZE], res[DATA_SIZE];
-    // for(int i = 0; i < DATA_SIZE; i++) {
-    //     a[i] = rand();
-    //     b[i] = rand();
-    // }
+        // cl_mem cl_a = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float) * DATA_SIZE, &a[0], NULL);
+        // cl_mem cl_b = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float) * DATA_SIZE, &b[0], NULL);
+        // cl_mem cl_res = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float) * DATA_SIZE, NULL, NULL);
+        // if(cl_a == 0 || cl_b == 0 || cl_res == 0) {
+        //     printf("Can't create OpenCL buffer\n");
+        //     clReleaseMemObject(cl_a);
+        //     clReleaseMemObject(cl_b);
+        //     clReleaseMemObject(cl_res);
+        //     clReleaseCommandQueue(queue);
+        //     clReleaseContext(context);
+        //     return 0;
+        // }
 
-    // cl_mem cl_a = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float) * DATA_SIZE, &a[0], NULL);
-    // cl_mem cl_b = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float) * DATA_SIZE, &b[0], NULL);
-    // cl_mem cl_res = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float) * DATA_SIZE, NULL, NULL);
-    // if(cl_a == 0 || cl_b == 0 || cl_res == 0) {
-    //     printf("Can't create OpenCL buffer\n");
-    //     clReleaseMemObject(cl_a);
-    //     clReleaseMemObject(cl_b);
-    //     clReleaseMemObject(cl_res);
-    //     clReleaseCommandQueue(queue);
-    //     clReleaseContext(context);
-    //     return 0;
-    // }
+        cl_program program = load_program(context, devices[0], filename);
+        if(program == 0) {
+            // printf("Can't load or build program\n");
+            // clReleaseMemObject(cl_a);
+            // clReleaseMemObject(cl_b);
+            // clReleaseMemObject(cl_res);
+            // clReleaseCommandQueue(queue);
+            clReleaseContext(context);
+        }
 
-    cl_program program = load_program(context, devices[0], filename);
-    if(program == 0) {
-        // printf("Can't load or build program\n");
+        // cl_kernel adder = clCreateKernel(program, "adder", 0);
+        // if(adder == 0) {
+        //     printf("Can't load kernel\n");
+        //     clReleaseProgram(program);
+        //     clReleaseMemObject(cl_a);
+        //     clReleaseMemObject(cl_b);
+        //     clReleaseMemObject(cl_res);
+        //     clReleaseCommandQueue(queue);
+        //     clReleaseContext(context);
+        //     return 0;
+        // }
+
+        // clSetKernelArg(adder, 0, sizeof(cl_mem), &cl_a);
+        // clSetKernelArg(adder, 1, sizeof(cl_mem), &cl_b);
+        // clSetKernelArg(adder, 2, sizeof(cl_mem), &cl_res);
+
+        // size_t work_size = DATA_SIZE;
+        // err = clEnqueueNDRangeKernel(queue, adder, 1, 0, &work_size, 0, 0, 0, 0);
+        // if(err == CL_SUCCESS) {
+        //     err = clEnqueueReadBuffer(queue, cl_res, CL_TRUE, 0, sizeof(float) * DATA_SIZE, &res[0], 0, 0, 0);
+        // }
+
+        // if(err == CL_SUCCESS) {
+        //     int correct = 1;
+        //     for(int i = 0; i < DATA_SIZE; i++) {
+        //         if(a[i] + b[i] != res[i]) {
+        //             correct = 0;
+        //             break;
+        //         }
+        //     }
+
+        //     if(correct) {
+        //         printf("Data is correct\n");
+        //     }
+        //     else {
+        //         printf("Data is incorrect\n");
+        //     }
+        // }
+        // else {
+        //     printf("Can't run kernel or read back data\n");
+        // }
+
+
+        // clReleaseKernel(adder);
+        clReleaseProgram(program);
         // clReleaseMemObject(cl_a);
         // clReleaseMemObject(cl_b);
         // clReleaseMemObject(cl_res);
         // clReleaseCommandQueue(queue);
         clReleaseContext(context);
-        return 0;
     }
-
-    // cl_kernel adder = clCreateKernel(program, "adder", 0);
-    // if(adder == 0) {
-    //     printf("Can't load kernel\n");
-    //     clReleaseProgram(program);
-    //     clReleaseMemObject(cl_a);
-    //     clReleaseMemObject(cl_b);
-    //     clReleaseMemObject(cl_res);
-    //     clReleaseCommandQueue(queue);
-    //     clReleaseContext(context);
-    //     return 0;
-    // }
-
-    // clSetKernelArg(adder, 0, sizeof(cl_mem), &cl_a);
-    // clSetKernelArg(adder, 1, sizeof(cl_mem), &cl_b);
-    // clSetKernelArg(adder, 2, sizeof(cl_mem), &cl_res);
-
-    // size_t work_size = DATA_SIZE;
-    // err = clEnqueueNDRangeKernel(queue, adder, 1, 0, &work_size, 0, 0, 0, 0);
-    // if(err == CL_SUCCESS) {
-    //     err = clEnqueueReadBuffer(queue, cl_res, CL_TRUE, 0, sizeof(float) * DATA_SIZE, &res[0], 0, 0, 0);
-    // }
-
-    // if(err == CL_SUCCESS) {
-    //     int correct = 1;
-    //     for(int i = 0; i < DATA_SIZE; i++) {
-    //         if(a[i] + b[i] != res[i]) {
-    //             correct = 0;
-    //             break;
-    //         }
-    //     }
-
-    //     if(correct) {
-    //         printf("Data is correct\n");
-    //     }
-    //     else {
-    //         printf("Data is incorrect\n");
-    //     }
-    // }
-    // else {
-    //     printf("Can't run kernel or read back data\n");
-    // }
-
-
-    // clReleaseKernel(adder);
-    clReleaseProgram(program);
-    // clReleaseMemObject(cl_a);
-    // clReleaseMemObject(cl_b);
-    // clReleaseMemObject(cl_res);
-    // clReleaseCommandQueue(queue);
-    clReleaseContext(context);
-
-    return 0;
 }
