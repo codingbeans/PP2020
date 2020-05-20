@@ -42,8 +42,8 @@ cl_program load_program(cl_context context, cl_device_id device_id, const char* 
     return program;
 }
 
+char filename[MAX_FILENAME_LENGTH];
 int main() {
-    char filename[MAX_FILENAME_LENGTH];
     scanf("%s", filename);
 
     cl_int err;
@@ -73,18 +73,18 @@ int main() {
     cl_device_id devices[cb / sizeof(cl_device_id)];
     clGetContextInfo(context, CL_CONTEXT_DEVICES, cb, &devices[0], 0);
 
-    clGetDeviceInfo(devices[0], CL_DEVICE_NAME, 0, NULL, &cb);
-    char devname[cb];
-    clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
+    // clGetDeviceInfo(devices[0], CL_DEVICE_NAME, 0, NULL, &cb);
+    // char devname[cb];
+    // clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
     // devname[cb] = '\0';
     // printf("Device: %s \n", devname);
 
-    cl_command_queue queue = clCreateCommandQueueWithProperties(context, devices[0], 0, 0);
-    if(queue == 0) {
-        printf("Can't create command queue\n");
-        clReleaseContext(context);
-        return 0;
-    }
+    // cl_command_queue queue = clCreateCommandQueueWithProperties(context, devices[0], 0, 0);
+    // if(queue == 0) {
+    //     printf("Can't create command queue\n");
+    //     clReleaseContext(context);
+    //     return 0;
+    // }
 
     // const int DATA_SIZE = 1048;
     // float a[DATA_SIZE], b[DATA_SIZE], res[DATA_SIZE];
@@ -112,7 +112,7 @@ int main() {
         // clReleaseMemObject(cl_a);
         // clReleaseMemObject(cl_b);
         // clReleaseMemObject(cl_res);
-        clReleaseCommandQueue(queue);
+        // clReleaseCommandQueue(queue);
         clReleaseContext(context);
         return 0;
     }
@@ -165,7 +165,7 @@ int main() {
     // clReleaseMemObject(cl_a);
     // clReleaseMemObject(cl_b);
     // clReleaseMemObject(cl_res);
-    clReleaseCommandQueue(queue);
+    // clReleaseCommandQueue(queue);
     clReleaseContext(context);
 
     return 0;
