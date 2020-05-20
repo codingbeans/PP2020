@@ -10,7 +10,7 @@
 
 char program_chars[MAX_PROGRAM_LENGTH];
 
-cl_program load_program(cl_context context, const char* filename)
+cl_program load_program(cl_context context, cl_device_id device_id, const char* filename)
 {
     FILE *fp;
     char ch;
@@ -29,6 +29,15 @@ cl_program load_program(cl_context context, const char* filename)
     const char* source = &program_chars[0];
     cl_program program = clCreateProgramWithSource(context, 1, &source, 0, 0);
     if(program == 0) {
+        return 0;
+    }
+
+    cl_int ret = CL_SUCCESS;
+    size_t len = 0;
+    ret = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &len);
+    char *buffer = calloc(len, sizeof(char));
+    ret = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, len, buffer, NULL);
+    if(ret != CL_SUCCESS) {
         return 0;
     }
 
@@ -83,7 +92,7 @@ int main() {
         return 0;
     }
 
-    const int DATA_SIZE = 1048576;
+    const int DATA_SIZE = 1048;
     float a[DATA_SIZE], b[DATA_SIZE], res[DATA_SIZE];
     for(int i = 0; i < DATA_SIZE; i++) {
         a[i] = rand();
@@ -103,7 +112,7 @@ int main() {
         return 0;
     }
 
-    cl_program program = load_program(context, "shader.cl");
+    cl_program program = load_program(context, devices[0], "shader.cl");
     if(program == 0) {
         printf("Can't load or build program\n");
         clReleaseMemObject(cl_a);
