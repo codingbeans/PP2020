@@ -6,7 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_PROGRAM_LENGTH 300 + 5
+#define MAX_FILENAME_LENGTH 30 + 5
+#define MAX_PROGRAM_LENGTH 3000 + 5
 
 char program_chars[MAX_PROGRAM_LENGTH];
 
@@ -46,6 +47,9 @@ cl_program load_program(cl_context context, cl_device_id device_id, const char* 
 }
 
 int main() {
+    char filename[MAX_FILENAME_LENGTH];
+    scanf("%s", filename);
+
     cl_int err;
     cl_uint num;
     err = clGetPlatformIDs(0, 0, &num);
@@ -109,7 +113,7 @@ int main() {
         return 0;
     }
 
-    cl_program program = load_program(context, devices[0], "err1.cl");
+    cl_program program = load_program(context, devices[0], filename);
     if(program == 0) {
         // printf("Can't load or build program\n");
         clReleaseMemObject(cl_a);
