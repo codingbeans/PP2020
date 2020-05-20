@@ -55,8 +55,8 @@ int main() {
             return 0;
         }
 
-        err = clGetPlatformIDs(num, &platforms[0], &num);
         cl_platform_id platforms[num];
+        err = clGetPlatformIDs(num, &platforms[0], &num);
         if(err != CL_SUCCESS) {
             printf("Unable to get platform ID\n");
             return 0;
