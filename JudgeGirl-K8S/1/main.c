@@ -73,9 +73,10 @@ int main() {
     clGetDeviceInfo(devices[0], CL_DEVICE_NAME, 0, NULL, &cb);
     char devname[cb];
     clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
+    devname[cb] = '\0';
     printf("Device: %s \n", devname);
 
-    cl_command_queue queue = clCreateCommandQueue(context, devices[0], 0, 0);
+    cl_command_queue queue = clCreateCommandQueueWithProperties(context, devices[0], 0, 0);
     if(queue == 0) {
         printf("Can't create command queue\n");
         clReleaseContext(context);
