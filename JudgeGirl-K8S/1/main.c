@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_PROGRAM_LENGTH 30 + 5
+#define MAX_PROGRAM_LENGTH 300 + 5
 
 char program_chars[MAX_PROGRAM_LENGTH];
 
