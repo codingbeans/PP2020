@@ -80,7 +80,7 @@ int main() {
     char devname[cb];
     clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
     devname[cb] = '\0';
-    printf("Device: %s \n", devname);
+    // printf("Device: %s \n", devname);
 
     cl_command_queue queue = clCreateCommandQueueWithProperties(context, devices[0], 0, 0);
     if(queue == 0) {
