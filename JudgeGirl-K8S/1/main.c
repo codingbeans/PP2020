@@ -38,6 +38,7 @@ cl_program load_program(cl_context context, cl_device_id device_id, const char* 
     char *buffer = calloc(len, sizeof(char));
     ret = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, len, buffer, NULL);
     if(ret != CL_SUCCESS) {
+        printf("%s", buffer);
         return 0;
     }
 
@@ -114,7 +115,7 @@ int main() {
 
     cl_program program = load_program(context, devices[0], "shader.cl");
     if(program == 0) {
-        printf("Can't load or build program\n");
+        // printf("Can't load or build program\n");
         clReleaseMemObject(cl_a);
         clReleaseMemObject(cl_b);
         clReleaseMemObject(cl_res);
