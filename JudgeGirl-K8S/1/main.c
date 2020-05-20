@@ -37,7 +37,7 @@ cl_program load_program(cl_context context, cl_device_id device_id, const char* 
     clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, len, program_log, NULL);
     program_log[len] = '\0';
     if(ret != CL_SUCCESS) {
-        printf("%s", buffer);
+        printf("%s", program_log);
         return 0;
     }
 
@@ -45,7 +45,6 @@ cl_program load_program(cl_context context, cl_device_id device_id, const char* 
 }
 
 char filename[MAX_FILENAME_LENGTH];
-cl_platform_id platforms[num];
 int main() {
     while(scanf("%s", filename) != EOF) {
         cl_int err;
@@ -57,6 +56,7 @@ int main() {
         }
 
         err = clGetPlatformIDs(num, &platforms[0], &num);
+        cl_platform_id platforms[num];
         if(err != CL_SUCCESS) {
             printf("Unable to get platform ID\n");
             return 0;
