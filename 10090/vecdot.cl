@@ -1,6 +1,6 @@
 #ifndef _UTILS_H
 #define _UTILS_H
-#include <stdint.h>
+#define uint32_t unsigned int
 static inline uint32_t rotate_left(uint32_t x, uint32_t n) {
     return  (x << n) | (x >> (32-n));
 }
