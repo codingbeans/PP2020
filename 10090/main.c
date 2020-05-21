@@ -89,19 +89,6 @@ int init(const char* filename) {
     clPrg = clCreateProgramWithSource(clCtx, 1, &source, 0, 0);
     CheckFailAndExit(err);
     err = clBuildProgram(clPrg, 1, &device_id, NULL, NULL, NULL);
-    if (err != CL_SUCCESS) {
-        fprintf(stderr, "Error: Line %u in file %s\n\n", __LINE__, __FILE__);
-        size_t log_size;
-        clGetProgramBuildInfo(clPrg, device_id,
-                CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-        char *program_log = (char *) calloc(log_size+1, sizeof(char));
-        clGetProgramBuildInfo(clPrg, device_id,
-                CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
-        program_log[log_size] = '\0';
-        fprintf(stderr, "log= %s\n", program_log);
-        free(program_log);
-        CheckFailAndExit(err);
-    }
     clKrn = clCreateKernel(clPrg, "vecdot", &err);
     CheckFailAndExit(err);
 
@@ -116,10 +103,10 @@ int init(const char* filename) {
 
 int execute() {
     uint32_t padding = 0;
-    while (N%GPULOCAL) {
-        padding += encrypt(N, keyA) * encrypt(N, keyB);
-        N++;
-    }
+    // while (N%GPULOCAL) {
+    //     padding += encrypt(N, keyA) * encrypt(N, keyB);
+    //     N++;
+    // }
 
     cl_int err;
     err = clSetKernelArg(clKrn, 0, sizeof(cl_uint), (void *) &keyA);
