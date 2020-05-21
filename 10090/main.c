@@ -1,6 +1,7 @@
 #include <CL/cl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "utils.h"
 
 #define CheckFailAndExit(status) \
     if (status != CL_SUCCESS) { \
@@ -87,7 +88,7 @@ int init(const char* filename) {
     const char* source = &program_chars[0];
     cl_program program = clCreateProgramWithSource(clCtx, 1, &source, 0, 0);
     CheckFailAndExit(err);
-    err = clBuildProgram(clPrg, 1, device_id, NULL, NULL, NULL);
+    err = clBuildProgram(clPrg, 1, &device_id, NULL, NULL, NULL);
     clKrn = clCreateKernel(clPrg, "vecdot", &err);
     CheckFailAndExit(err);
 
