@@ -18,8 +18,8 @@ __kernel void vecdot(uint32_t keyA, uint32_t keyB, __global int* C) {
     int localSz = get_local_size(0);
     buf[localId] = encrypt(globalId, keyA) * encrypt(globalId, keyB);
     barrier(CLK_LOCAL_MEM_FENCE);
-    for (int i = 1; i<localSz; i <<= 1) {
-        if (localId + i < localSz)
+    for (int i = localSz>>1; i; i >>= 1) {
+        if (localId < i)
             buf[localId] += buf[localId + i];
         barrier(CLK_LOCAL_MEM_FENCE);
     }
