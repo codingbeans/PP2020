@@ -126,7 +126,7 @@ int execute() {
     CheckFailAndExit(err);
     err = clSetKernelArg(clKrn, 1, sizeof(cl_uint), (void *) &keyB);
     CheckFailAndExit(err);
-    err = clSetKernelArg(clKrn, 2, sizeof(cl_mem), (void *) clMemOut);
+    err = clSetKernelArg(clKrn, 2, sizeof(cl_mem), (void *) &clMemOut);
     CheckFailAndExit(err);
 
     // Execute and get result
