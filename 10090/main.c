@@ -89,6 +89,18 @@ int init(const char* filename) {
     cl_program program = clCreateProgramWithSource(clCtx, 1, &source, 0, 0);
     CheckFailAndExit(err);
     err = clBuildProgram(clPrg, 1, &device_id, NULL, NULL, NULL);
+    if (err != CL_SUCCESS) {
+        fprintf(stderr, "Error: Line %u in file %s\n\n", __LINE__, __FILE__);
+        size_t log_size;
+        clGetProgramBuildInfo(clPrg, device_id,
+                CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+        char *program_log = (char *) calloc(log_size+1, sizeof(char));
+        clGetProgramBuildInfo(clPrg, device_id,
+                CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
+        printf("%s", program_log);
+        free(program_log);
+        CheckFailAndExit(CL_BUILD_PROGRAM_FAILURE);
+    }
     clKrn = clCreateKernel(clPrg, "vecdot", &err);
     CheckFailAndExit(err);
 
