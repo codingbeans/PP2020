@@ -45,7 +45,7 @@ int main() {
     int length = 0;
     if ((fp = fopen(filename, "r")) == NULL) {
         printf("open file error!\n");
-        return NULL;
+        return 0;
     }
     
     while((ch = getc(fp)) != EOF) {
