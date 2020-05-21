@@ -97,7 +97,8 @@ int init(const char* filename) {
         char *program_log = (char *) calloc(log_size+1, sizeof(char));
         clGetProgramBuildInfo(clPrg, device_id,
                 CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
-        printf("log= %s", program_log);
+        program_log[log_size] = '\0';
+        fprintf(stderr, "log= %s\n", program_log);
         free(program_log);
         CheckFailAndExit(CL_BUILD_PROGRAM_FAILURE);
     }
