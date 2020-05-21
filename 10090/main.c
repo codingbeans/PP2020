@@ -86,7 +86,7 @@ int init(const char* filename) {
     // Program
     program_chars[length] = 0;
     const char* source = &program_chars[0];
-    cl_program program = clCreateProgramWithSource(clCtx, 1, &source, 0, 0);
+    clPrg = clCreateProgramWithSource(clCtx, 1, &source, 0, 0);
     CheckFailAndExit(err);
     err = clBuildProgram(clPrg, 1, &device_id, NULL, NULL, NULL);
     if (err != CL_SUCCESS) {
@@ -100,7 +100,7 @@ int init(const char* filename) {
         program_log[log_size] = '\0';
         fprintf(stderr, "log= %s\n", program_log);
         free(program_log);
-        CheckFailAndExit(CL_BUILD_PROGRAM_FAILURE);
+        CheckFailAndExit(err);
     }
     clKrn = clCreateKernel(clPrg, "vecdot", &err);
     CheckFailAndExit(err);
