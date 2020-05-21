@@ -2,23 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils.h"
-
-#define CheckFailAndExit(status) \
-    if (status != CL_SUCCESS) { \
-        fprintf(stderr, "Error %d: Line %u in file %s\n\n", status, __LINE__, __FILE__), \
-        release(); \
-    }
-
-// Thanks to Morris Dada
-cl_context				clCtx;
-cl_program 				clPrg;
-cl_kernel				clKrn;
-cl_command_queue		clQue;
-cl_mem         			clMemOut;
 #define MAXGPU 1
 #define MAXN 16777216
 #define GPULOCAL 256
-uint32_t	hostC[MAXN/GPULOCAL];
+
+// A lot thanks to Morris
+cl_context clCtx;
+cl_program clPrg;
+cl_kernel clKrn;
+cl_command_queue clQue;
+cl_mem clMemOut;
+
+uint32_t hostC[MAXN/GPULOCAL];
 
 int release() {
     fprintf(stderr, "Starting Cleanup ...\n\n");
@@ -77,51 +72,85 @@ int init(const char* filename) {
 
     // Context
     clCtx = clCreateContext(NULL, 1, &device_id, NULL, NULL, &err);
-    CheckFailAndExit(err);
+    if(err != CL_SUCCESS) {
+        printf("Unable to create context\n");
+        return 0;
+    }
     
     // Command queue
     clQue = clCreateCommandQueue(clCtx, device_id, 0, &err);
-    CheckFailAndExit(err);
+    if(err != CL_SUCCESS) {
+        printf("Unable to create command queue\n");
+        return 0;
+    }
     
     // Program
     program_chars[length] = 0;
     const char* source = &program_chars[0];
-    clPrg = clCreateProgramWithSource(clCtx, 1, &source, 0, 0);
-    CheckFailAndExit(err);
+    clPrg = clCreateProgramWithSource(clCtx, 1, &source, 0, &err);
+    if(err != CL_SUCCESS) {
+        printf("Unable to create program\n");
+        return 0;
+    }
+
     err = clBuildProgram(clPrg, 1, &device_id, NULL, NULL, NULL);
+    if(err != CL_SUCCESS) {
+        printf("Unable to build program\n");
+        return 0;
+    }
+    
+    // Kernel
     clKrn = clCreateKernel(clPrg, "vecdot", &err);
-    CheckFailAndExit(err);
+    if(err != CL_SUCCESS) {
+        printf("Unable to create kernel\n");
+        return 0;
+    }
 
     // Buffers
     cl_mem_flags clOutBuffFlag = CL_MEM_WRITE_ONLY;
     clMemOut = clCreateBuffer(clCtx, clOutBuffFlag,
         sizeof(uint32_t)*MAXN/GPULOCAL, hostC, &err);
-    CheckFailAndExit(err);
+    if(err != CL_SUCCESS) {
+        printf("Unable to create buffer\n");
+        return 0;
+    }
 
     return 1;
 }
 
 int execute() {
     uint32_t padding = 0;
-    // while (N%GPULOCAL) {
-    //     padding += encrypt(N, keyA) * encrypt(N, keyB);
-    //     N++;
-    // }
+    while (N%GPULOCAL) {
+        padding += encrypt(N, keyA) * encrypt(N, keyB);
+        N++;
+    }
 
     cl_int err;
     err = clSetKernelArg(clKrn, 0, sizeof(cl_uint), (void *) &keyA);
-    CheckFailAndExit(err);
+    if(err != CL_SUCCESS) {
+        printf("Unable to set kernel arg 1\n");
+        return 0;
+    }
     err = clSetKernelArg(clKrn, 1, sizeof(cl_uint), (void *) &keyB);
-    CheckFailAndExit(err);
+    if(err != CL_SUCCESS) {
+        printf("Unable to set kernel arg 2\n");
+        return 0;
+    }
     err = clSetKernelArg(clKrn, 2, sizeof(cl_mem), (void *) &clMemOut);
-    CheckFailAndExit(err);
+    if(err != CL_SUCCESS) {
+        printf("Unable to set kernel arg 3\n");
+        return 0;
+    }
 
     // Execute and get result
     size_t globalOffset[] = {0};
     size_t globalSize[] = {N};
     size_t localSize[] = {GPULOCAL};
     err = clEnqueueNDRangeKernel(clQue, clKrn, 1, globalOffset, globalSize, localSize, 0 ,NULL, NULL);
-    CheckFailAndExit(err);
+    if(err != CL_SUCCESS) {
+        printf("Unable to enqueue\n");
+        return 0;
+    }
 
     clEnqueueReadBuffer(clQue, clMemOut, CL_TRUE, 0, sizeof(uint32_t)*N/GPULOCAL, 
             hostC, 0, NULL, NULL);
