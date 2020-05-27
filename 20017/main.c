@@ -3,9 +3,9 @@
 #include <stdlib.h>
 // #include <omp.h>
 #include "utils.h"
-#define MAXGPU 4
+#define MAXGPU 8
 #define MAXN 16777216
-#define GPULOCAL 128
+#define GPULOCAL 512
 
 // A lot thanks to Morris
 cl_context clCtx;
@@ -64,22 +64,22 @@ int init(const char* filename) {
     }
 
     // Device
-    cl_device_id device_id;
-    err = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, MAXGPU, &device_id, NULL);
+    cl_device_id device_id[MAXGPU];
+    err = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, MAXGPU, device_id, NULL);
     if (err != CL_SUCCESS) {
         printf("Unable to get device id");
         return 0;
     }
 
     // Context
-    clCtx = clCreateContext(NULL, 1, &device_id, NULL, NULL, &err);
+    clCtx = clCreateContext(NULL, 1, device_id, NULL, NULL, &err);
     if(err != CL_SUCCESS) {
         printf("Unable to create context\n");
         return 0;
     }
     
     // Command queue
-    clQue = clCreateCommandQueue(clCtx, device_id, 0, &err);
+    clQue = clCreateCommandQueue(clCtx, device_id[0], 0, &err);
     if(err != CL_SUCCESS) {
         printf("Unable to create command queue\n");
         return 0;
@@ -94,7 +94,7 @@ int init(const char* filename) {
         return 0;
     }
 
-    err = clBuildProgram(clPrg, 1, &device_id, NULL, NULL, NULL);
+    err = clBuildProgram(clPrg, 1, device_id, NULL, NULL, NULL);
     if(err != CL_SUCCESS) {
         printf("Unable to build program\n");
         return 0;

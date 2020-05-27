@@ -9,9 +9,10 @@ static inline uint32_t encrypt(uint32_t m, uint32_t key) {
 }
 #endif
 
+#define GPULOCAL 512
 // Thanks to Morris
 __kernel void vecdot(uint32_t keyA, uint32_t keyB, __global int* C) {
-    __local int buf[256];
+    __local int buf[GPULOCAL];
     int globalId = get_global_id(0);
     int groupId = get_group_id(0);
     int localId = get_local_id(0);
