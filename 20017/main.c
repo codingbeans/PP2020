@@ -1,11 +1,11 @@
 #include <CL/cl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <omp.h>
+// #include <omp.h>
 #include "utils.h"
-#define MAXGPU 1
+#define MAXGPU 4
 #define MAXN 16777216
-#define GPULOCAL 256
+#define GPULOCAL 128
 
 // A lot thanks to Morris
 cl_context clCtx;
@@ -65,7 +65,7 @@ int init(const char* filename) {
 
     // Device
     cl_device_id device_id;
-    err = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, NULL);
+    err = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, MAXGPU, &device_id, NULL);
     if (err != CL_SUCCESS) {
         printf("Unable to get device id");
         return 0;
@@ -157,7 +157,7 @@ int execute() {
             hostC, 0, NULL, NULL);
 
     uint32_t sum = 0;
-    #pragma omp parallel for schedule(static) reduction(+: sum)
+    // #pragma omp parallel for schedule(static) reduction(+: sum)
     for (int i=0; i< N/GPULOCAL; i++) sum+= hostC[i];
     printf("%u\n", sum - padding);
 
