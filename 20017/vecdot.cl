@@ -32,6 +32,8 @@ __kernel void vecdot(int N, uint32_t keyA, uint32_t keyB, __global int* C) {
             buf[localId] += buf[localId + i];
         barrier(CLK_LOCAL_MEM_FENCE);
     }
-    if (localId == 0)
-        atomic_add(&C[0], buf[0]);
+    if (localId == 0) {
+        uint32_t t = buf[0];
+        atomic_add(&C[0], t);
+    }
 }
