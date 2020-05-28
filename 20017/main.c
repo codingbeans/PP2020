@@ -97,6 +97,14 @@ int init(const char* filename) {
 
     err = clBuildProgram(clPrg, 1, device_id, NULL, NULL, NULL);
     if(err != CL_SUCCESS) {
+		size_t log_size;
+		clGetProgramBuildInfo(clPrg, device_id[0],
+				CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+		char *program_log = (char *) calloc(log_size+1, sizeof(char));
+		clGetProgramBuildInfo(clPrg, device_id[0],
+				CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
+		fprintf(stderr, "%s", program_log);
+		free(program_log);
         printf("Unable to build program\n");
         return 0;
     }
