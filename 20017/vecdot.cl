@@ -9,15 +9,22 @@ static inline uint32_t encrypt(uint32_t m, uint32_t key) {
 }
 #endif
 
-#define GPULOCAL 1024
+#define GPULOCAL 256
+#define BLK 256
 // Thanks to Morris
-__kernel void vecdot(uint32_t keyA, uint32_t keyB, __global int* C) {
-    __local int buf[GPULOCAL];
+__kernel void vecdot(int N, uint32_t keyA, uint32_t keyB, __global int* C) {
+    __local int buf[BLK];
     int globalId = get_global_id(0);
     int groupId = get_group_id(0);
     int localId = get_local_id(0);
     int localSz = get_local_size(0);
-    buf[localId] = encrypt(globalId, keyA) * encrypt(globalId, keyB);
+    int l = globalId * BLK;
+    int r = l + BLK;
+    if (r >= N) r = N;
+    int sum = 0;
+    for (int i = l; i < r; i++)
+        sum += encrypt(i, keyA) * encrypt(i, keyB);
+    buf[localId] = sum;
     barrier(CLK_LOCAL_MEM_FENCE);
     for (int i = localSz>>1; i; i >>= 1) {
         if (localId < i)
@@ -25,5 +32,5 @@ __kernel void vecdot(uint32_t keyA, uint32_t keyB, __global int* C) {
         barrier(CLK_LOCAL_MEM_FENCE);
     }
     if (localId == 0)
-        C[groupId] = buf[0];
+        atomic_add(&C[groupId&(BLK-1)], buf[0]);
 }

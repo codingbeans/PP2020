@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <omp.h>
 #include "utils.h"
-#define MAXGPU 2
+#define MAXGPU 1
 #define MAXN 16777216
-#define GPULOCAL 1024
+#define GPULOCAL 256
+#define BLK 256
 
 // A lot thanks to Morris
 cl_context clCtx;
@@ -110,7 +111,7 @@ int init(const char* filename) {
     // Buffers
     cl_mem_flags clOutBuffFlag = CL_MEM_WRITE_ONLY;
     clMemOut = clCreateBuffer(clCtx, clOutBuffFlag,
-        sizeof(uint32_t)*MAXN/GPULOCAL, hostC, &err);
+        sizeof(uint32_t)*BLK, hostC, &err);
     if(err != CL_SUCCESS) {
         printf("Unable to create buffer\n");
         return 0;
@@ -127,39 +128,59 @@ int execute() {
     }
 
     cl_int err;
-    err = clSetKernelArg(clKrn, 0, sizeof(cl_uint), (void *) &keyA);
+	err = clSetKernelArg(clKrn, 0, sizeof(cl_uint), (void *) &N);
+    if(err != CL_SUCCESS) {
+        printf("Unable to set kernel arg 0\n");
+        return 0;
+    }
+    err = clSetKernelArg(clKrn, 1, sizeof(cl_uint), (void *) &keyA);
     if(err != CL_SUCCESS) {
         printf("Unable to set kernel arg 1\n");
         return 0;
     }
-    err = clSetKernelArg(clKrn, 1, sizeof(cl_uint), (void *) &keyB);
+    err = clSetKernelArg(clKrn, 2, sizeof(cl_uint), (void *) &keyB);
     if(err != CL_SUCCESS) {
         printf("Unable to set kernel arg 2\n");
         return 0;
     }
-    err = clSetKernelArg(clKrn, 2, sizeof(cl_mem), (void *) &clMemOut);
+    err = clSetKernelArg(clKrn, 3, sizeof(cl_mem), (void *) &clMemOut);
     if(err != CL_SUCCESS) {
         printf("Unable to set kernel arg 3\n");
         return 0;
     }
 
-    // Execute and get result
+    // Partition to blocks, each size 256
+    // N = (N+GPULOCAL*BLK-1)/(GPULOCAL*BLK)*GPULOCAL;
     size_t globalOffset[] = {0};
     size_t globalSize[] = {N};
     size_t localSize[] = {GPULOCAL};
-    err = clEnqueueNDRangeKernel(clQue, clKrn, 1, globalOffset, globalSize, localSize, 0 ,NULL, NULL);
+
+    err = clEnqueueNDRangeKernel(clQue, clKrn, 1, globalOffset,
+            globalSize, localSize, 0, NULL, NULL);
     if(err != CL_SUCCESS) {
         printf("Unable to enqueue\n");
         return 0;
     }
 
-    clEnqueueReadBuffer(clQue, clMemOut, CL_TRUE, 0, sizeof(uint32_t)*N/GPULOCAL, 
-            hostC, 0, NULL, NULL);
+    // Get result
+    // N = N/GPULOCAL;
+    // err = clSetKernelArg(clKrn[1], 0, sizeof(cl_uint), (void *) &N);
+    // CheckFailAndExit(clStat);
+    // err = clSetKernelArg(clKrn[1], 1, sizeof(cl_mem), (void *) clMemOut);
+    // CheckFailAndExit(clStat);
+    // size_t globalOffset[] = {0};
+    // size_t globalSize[] = {1024};
+    // size_t localSize[] = {1024};
+    // assert(N <= localSize[0]);
+    // err = clEnqueueNDRangeKernel(*clQue, clKrn[1], 1, globalOffset,
+    //         globalSize, localSize, 0, NULL, NULL);
+    // CheckFailAndExit(clStat);
 
-    uint32_t sum = 0;
-    // #pragma omp parallel for schedule(static) reduction(+: sum) num_threads(2)
-    for (int i=0; i< N/GPULOCAL; i++) sum+= hostC[i];
-    printf("%u\n", sum - padding);
+	// -- read back
+	clEnqueueReadBuffer(clQue, clMemOut, CL_TRUE, 0, sizeof(uint32_t) * BLK, hostC, 0, NULL, NULL);
+	uint32_t sum;
+    for (int i=0; i< BLK; i++) sum+= hostC[i];
+    printf("%u\n", sum);
 
     return 1;
 }
