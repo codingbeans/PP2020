@@ -15,8 +15,6 @@ cl_kernel clKrn;
 cl_command_queue clQue;
 cl_mem clMemOut;
 
-uint32_t hostC[BLK];
-
 int release() {
     fprintf(stderr, "Starting Cleanup ...\n\n");
     if (clMemOut) clReleaseMemObject(clMemOut);
@@ -119,7 +117,7 @@ int init(const char* filename) {
     // Buffers
     cl_mem_flags clOutBuffFlag = CL_MEM_READ_WRITE;
     clMemOut = clCreateBuffer(clCtx, clOutBuffFlag,
-        sizeof(uint32_t)*BLK, hostC, &err);
+        sizeof(uint32_t)*BLK, NULL, &err);
     if(err != CL_SUCCESS) {
         printf("Unable to create buffer\n");
         return 0;
