@@ -13,12 +13,12 @@ static inline uint32_t encrypt(uint32_t m, uint32_t key) {
 #define BLK 256
 // Thanks to Morris
 __kernel void vecdot(int N, uint32_t keyA, uint32_t keyB, __global int* C) {
-    C[groupId&(BLK-1)] = 0;
     __local int buf[BLK];
     int globalId = get_global_id(0);
     int groupId = get_group_id(0);
     int localId = get_local_id(0);
     int localSz = get_local_size(0);
+    C[groupId&(BLK-1)] = 0;
     int l = globalId * BLK;
     int r = l + BLK;
     if (r >= N) r = N;
