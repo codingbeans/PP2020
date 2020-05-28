@@ -27,7 +27,7 @@ int release() {
     exit(0);
 }
 
-#define MAX_PROGRAM_LENGTH 1000 + 5
+#define MAX_PROGRAM_LENGTH 1500 + 5
 
 int N;
 uint32_t keyA, keyB;
@@ -129,12 +129,6 @@ int init(const char* filename) {
 }
 
 int execute() {
-    uint32_t padding = 0;
-    while (N%GPULOCAL) {
-        padding += encrypt(N, keyA) * encrypt(N, keyB);
-        N++;
-    }
-
     cl_int err;
 	err = clSetKernelArg(clKrn, 0, sizeof(cl_uint), (void *) &N);
     if(err != CL_SUCCESS) {
