@@ -18,7 +18,6 @@ __kernel void vecdot(int N, uint32_t keyA, uint32_t keyB, __global int* C) {
     int groupId = get_group_id(0);
     int localId = get_local_id(0);
     int localSz = get_local_size(0);
-    C[groupId&(BLK-1)] = 0;
     int l = globalId * BLK;
     int r = l + BLK;
     if (r >= N) r = N;
@@ -33,5 +32,5 @@ __kernel void vecdot(int N, uint32_t keyA, uint32_t keyB, __global int* C) {
         barrier(CLK_LOCAL_MEM_FENCE);
     }
     if (localId == 0)
-        atomic_add(&C[groupId&(BLK-1)], buf[0]);
+        atomic_add(&C[0], buf[0]);
 }
