@@ -181,7 +181,10 @@ int execute() {
 	// -- read back
 	clEnqueueReadBuffer(clQue, clMemOut, CL_TRUE, 0, sizeof(uint32_t) * BLK, hostC, 0, NULL, NULL);
 	uint32_t sum;
-    for (int i=0; i< BLK; i++) sum+= hostC[i];
+    for (int i=0; i< BLK; i++) {
+        sum+= hostC[i];
+        hostC[i] = 0;
+    }
     printf("%u\n", sum);
 
     return 1;
