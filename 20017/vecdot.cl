@@ -13,6 +13,7 @@ static inline uint32_t encrypt(uint32_t m, uint32_t key) {
 #define BLK 256
 // Thanks to Morris
 __kernel void vecdot(int N, uint32_t keyA, uint32_t keyB, __global int* C) {
+    C[0] = 0;
     __local int buf[BLK];
     int globalId = get_global_id(0);
     int groupId = get_group_id(0);

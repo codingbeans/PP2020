@@ -156,7 +156,6 @@ int execute() {
     size_t globalOffset[] = {0};
     size_t globalSize[] = {N};
     size_t localSize[] = {GPULOCAL};
-    hostC[0] = 0;
 
     err = clEnqueueNDRangeKernel(clQue, clKrn, 1, globalOffset,
             globalSize, localSize, 0, NULL, NULL);
