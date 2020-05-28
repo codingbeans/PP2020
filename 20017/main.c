@@ -15,7 +15,7 @@ cl_kernel clKrn;
 cl_command_queue clQue;
 cl_mem clMemOut;
 
-uint32_t hostC[MAXN/GPULOCAL];
+uint32_t hostC[BLK];
 
 int release() {
     fprintf(stderr, "Starting Cleanup ...\n\n");
@@ -152,7 +152,6 @@ int execute() {
     }
 
     // Partition to blocks, each size 256
-    // N = (N+GPULOCAL*BLK-1)/(GPULOCAL*BLK)*GPULOCAL;
     N /= BLK;
     size_t globalOffset[] = {0};
     size_t globalSize[] = {N};
@@ -165,23 +164,9 @@ int execute() {
         return 0;
     }
 
-    // Get result
-    // N = N/GPULOCAL;
-    // err = clSetKernelArg(clKrn[1], 0, sizeof(cl_uint), (void *) &N);
-    // CheckFailAndExit(clStat);
-    // err = clSetKernelArg(clKrn[1], 1, sizeof(cl_mem), (void *) clMemOut);
-    // CheckFailAndExit(clStat);
-    // size_t globalOffset[] = {0};
-    // size_t globalSize[] = {1024};
-    // size_t localSize[] = {1024};
-    // assert(N <= localSize[0]);
-    // err = clEnqueueNDRangeKernel(*clQue, clKrn[1], 1, globalOffset,
-    //         globalSize, localSize, 0, NULL, NULL);
-    // CheckFailAndExit(clStat);
-
 	// -- read back
 	clEnqueueReadBuffer(clQue, clMemOut, CL_TRUE, 0, sizeof(uint32_t) * BLK, hostC, 0, NULL, NULL);
-	uint32_t sum;
+	uint32_t sum = 0;
     for (int i=0; i< BLK; i++) {
         sum+= hostC[i];
         hostC[i] = 0;
