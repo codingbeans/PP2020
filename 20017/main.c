@@ -152,7 +152,7 @@ int execute() {
     }
 
     // Partition to blocks, each size 256
-    N /= BLK;
+    N = (N+GPULOCAL*BLK-1)/(GPULOCAL*BLK)*GPULOCAL;
     size_t globalOffset[] = {0};
     size_t globalSize[] = {N};
     size_t localSize[] = {GPULOCAL};
