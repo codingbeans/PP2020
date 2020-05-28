@@ -117,7 +117,7 @@ int init(const char* filename) {
     }
 
     // Buffers
-    cl_mem_flags clOutBuffFlag = CL_MEM_WRITE_ONLY;
+    cl_mem_flags clOutBuffFlag = CL_MEM_READ_WRITE;
     clMemOut = clCreateBuffer(clCtx, clOutBuffFlag,
         sizeof(uint32_t)*BLK, hostC, &err);
     if(err != CL_SUCCESS) {
@@ -156,6 +156,7 @@ int execute() {
     size_t globalOffset[] = {0};
     size_t globalSize[] = {N};
     size_t localSize[] = {GPULOCAL};
+    hostC[0] = 0;
 
     err = clEnqueueNDRangeKernel(clQue, clKrn, 1, globalOffset,
             globalSize, localSize, 0, NULL, NULL);
