@@ -155,6 +155,8 @@ int execute() {
     size_t globalSize[] = {N};
     size_t localSize[] = {GPULOCAL};
 
+    uint32_t ZERO = 0;
+    err = clEnqueueWriteBuffer(clQue, clMemOut, CL_TRUE, 0, sizeof(uint32_t), (void *) &ZERO, 0, NULL, NULL);
     err = clEnqueueNDRangeKernel(clQue, clKrn, 1, globalOffset,
             globalSize, localSize, 0, NULL, NULL);
     if(err != CL_SUCCESS) {
