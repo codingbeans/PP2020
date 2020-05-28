@@ -166,7 +166,7 @@ int execute() {
 
 	// -- read back
 	uint32_t sum = 0;
-	clEnqueueReadBuffer(clQue, clMemOut, CL_TRUE, 0, sizeof(uint32_t), sum, 0, NULL, NULL);
+	clEnqueueReadBuffer(clQue, clMemOut, CL_TRUE, 0, sizeof(uint32_t), &sum, 0, NULL, NULL);
     printf("%u\n", sum);
 
     return 1;
