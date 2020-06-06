@@ -177,7 +177,7 @@ int execute() {
         err = clEnqueueNDRangeKernel(clQue[device], clKrn[device], 1, globalOffset,
                 globalSize, localSize, 0, NULL, NULL);
         if(err != CL_SUCCESS) {
-            printf("Unable to enqueue\n");
+            printf("Unable to enqueue %d\n", device);
             return 0;
         }
     }
