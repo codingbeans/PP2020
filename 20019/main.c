@@ -164,12 +164,12 @@ int execute() {
     // Partition to blocks, each size 256
     N /= MAXGPU;
     N = (N+GPULOCAL*BLK-1)/BLK;
-    size_t globalOffset[] = {0};
-    size_t globalSize[] = {N};
-    size_t localSize[] = {GPULOCAL};
 
     uint32_t ZERO = 0;
     for (int device = 0; device < MAXGPU; device ++) {
+        size_t globalOffset[] = {0};
+        size_t globalSize[] = {N};
+        size_t localSize[] = {GPULOCAL};
         err = clEnqueueWriteBuffer(clQue[device], clMemOut[device], CL_TRUE, 0, sizeof(uint32_t), (void *) &ZERO, 0, NULL, NULL);
         err = clEnqueueNDRangeKernel(clQue[device], clKrn[device], 1, globalOffset,
                 globalSize, localSize, 0, NULL, NULL);
