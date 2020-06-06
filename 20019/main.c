@@ -31,23 +31,8 @@ int release() {
 
 int N;
 uint32_t keyA, keyB;
-char program_chars[MAX_PROGRAM_LENGTH];
+char program_chars[MAXGPU][MAX_PROGRAM_LENGTH];
 int init(const char* filename) {
-    FILE *fp;
-    char ch;
-    int length = 0;
-    if ((fp = fopen(filename, "r")) == NULL) {
-        printf("open file error!\n");
-        return 0;
-    }
-    
-    while((ch = getc(fp)) != EOF) {
-        program_chars[length++] = ch;
-    }
-
-    fclose(fp);
-    // Finish reading files
-
     // Platform
     cl_int err;
     cl_uint num;
@@ -73,6 +58,21 @@ int init(const char* filename) {
     }
 
     for (int device=0; device < MAXGPU; device++) {
+        FILE *fp;
+        char ch;
+        int length = 0;
+        if ((fp = fopen(filename, "r")) == NULL) {
+            printf("open file error!\n");
+            return 0;
+        }
+        
+        while((ch = getc(fp)) != EOF) {
+            program_chars[device][length++] = ch;
+        }
+
+        fclose(fp);
+        // Finish reading files
+
         // Context
         clCtx[device] = clCreateContext(NULL, 1, device_id + device, NULL, NULL, &err);
         if(err != CL_SUCCESS) {
@@ -88,8 +88,8 @@ int init(const char* filename) {
         }
     
         // Program
-        program_chars[length] = 0;
-        const char* source = &program_chars[0];
+        program_chars[device][length] = 0;
+        const char* source = &program_chars[device][0];
         clPrg[device] = clCreateProgramWithSource(clCtx[device], 1, &source, 0, &err);
         if(err != CL_SUCCESS) {
             printf("Unable to create program\n");
