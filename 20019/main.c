@@ -96,13 +96,13 @@ int init(const char* filename) {
             return 0;
         }
 
-        err = clBuildProgram(clPrg[device], 1, device_id, NULL, NULL, NULL);
+        err = clBuildProgram(clPrg[device], 1, device_id + device, NULL, NULL, NULL);
         if(err != CL_SUCCESS) {
             size_t log_size;
-            clGetProgramBuildInfo(clPrg[device], device_id[0],
+            clGetProgramBuildInfo(clPrg[device], device_id[device],
                     CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
             char *program_log = (char *) calloc(log_size+1, sizeof(char));
-            clGetProgramBuildInfo(clPrg[device], device_id[0],
+            clGetProgramBuildInfo(clPrg[device], device_id[device],
                     CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
             fprintf(stderr, "%s", program_log);
             free(program_log);
