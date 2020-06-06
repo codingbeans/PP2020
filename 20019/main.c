@@ -133,8 +133,8 @@ int execute() {
     cl_int err;
     N++;
     for (int device = 0; device < MAXGPU; device++) {
-        uint32_t L = N / MAXGPU * device;
-        uint32_t R = N / (MAXGPU * (device + 1));
+        uint32_t L = N * device / MAXGPU ;
+        uint32_t R = N * (device + 1) / MAXGPU ;
         err = clSetKernelArg(clKrn[device], 0, sizeof(cl_uint), (void *) &L);
         if(err != CL_SUCCESS) {
             printf("Unable to set kernel arg 0\n");
@@ -162,8 +162,7 @@ int execute() {
         }
     }
     // Partition to blocks, each size 256
-    N /= MAXGPU;
-    N = (N+GPULOCAL*BLK-1)/BLK;
+    N = (N+GPULOCAL*BLK-1)/(BLK * MAXGPU);
 
     uint32_t ZERO = 0;
     for (int device = 0; device < MAXGPU; device ++) {
