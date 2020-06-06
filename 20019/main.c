@@ -97,7 +97,7 @@ int init(const char* filename) {
         return 0;
     }
 
-    err = clBuildProgram(clPrg, 1, device_id, NULL, NULL, NULL);
+    err = clBuildProgram(clPrg, MAXGPU, device_id, NULL, NULL, NULL);
     if(err != CL_SUCCESS) {
 		size_t log_size;
 		clGetProgramBuildInfo(clPrg, device_id[0],
