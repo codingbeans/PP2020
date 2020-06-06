@@ -9,8 +9,8 @@
 #define BLK 256
 
 // A lot thanks to Morris
-cl_context clCtx;
-cl_program clPrg;
+cl_context clCtx[MAXGPU];
+cl_program clPrg[MAXGPU];
 cl_kernel clKrn[MAXGPU];
 cl_command_queue clQue[MAXGPU];
 cl_mem clMemOut[MAXGPU];
@@ -21,9 +21,9 @@ int release() {
         if (clMemOut[device]) clReleaseMemObject(clMemOut[device]);
         if (clKrn[device]) clReleaseKernel(clKrn[device]);
         if (clQue[device]) clReleaseCommandQueue(clQue[device]);
+        if (clPrg[device]) clReleaseProgram(clPrg[device]);
+        if (clCtx[device]) clReleaseContext(clCtx[device]);
     }
-    if (clPrg) clReleaseProgram(clPrg);
-    if (clCtx) clReleaseContext(clCtx);
     exit(0);
 }
 
@@ -72,63 +72,60 @@ int init(const char* filename) {
         return 0;
     }
 
-    // Context
-    clCtx = clCreateContext(NULL, MAXGPU, device_id, NULL, NULL, &err);
-    if(err != CL_SUCCESS) {
-        printf("Unable to create context\n");
-        return 0;
-    }
+    for (int device=0; device < MAXGPU; device++) {
+        // Context
+        clCtx[device] = clCreateContext(NULL, 1, device_id + device, NULL, NULL, &err);
+        if(err != CL_SUCCESS) {
+            printf("Unable to create context\n");
+            return 0;
+        }
     
-    // Command queue
-    for (int device = 0; device < MAXGPU; device++) {
-        clQue[device] = clCreateCommandQueue(clCtx, device_id[device], 0, &err);
+        // Command queue
+        clQue[device] = clCreateCommandQueue(clCtx[device], device_id[device], 0, &err);
         if(err != CL_SUCCESS) {
             printf("Unable to create command queue\n");
             return 0;
         }
-    }
     
-    // Program
-    program_chars[length] = 0;
-    const char* source = &program_chars[0];
-    clPrg = clCreateProgramWithSource(clCtx, 1, &source, 0, &err);
-    if(err != CL_SUCCESS) {
-        printf("Unable to create program\n");
-        return 0;
-    }
+        // Program
+        program_chars[length] = 0;
+        const char* source = &program_chars[0];
+        clPrg[device] = clCreateProgramWithSource(clCtx[device], 1, &source, 0, &err);
+        if(err != CL_SUCCESS) {
+            printf("Unable to create program\n");
+            return 0;
+        }
 
-    err = clBuildProgram(clPrg, MAXGPU, device_id, NULL, NULL, NULL);
-    if(err != CL_SUCCESS) {
-		size_t log_size;
-		clGetProgramBuildInfo(clPrg, device_id[0],
-				CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-		char *program_log = (char *) calloc(log_size+1, sizeof(char));
-		clGetProgramBuildInfo(clPrg, device_id[0],
-				CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
-		fprintf(stderr, "%s", program_log);
-		free(program_log);
-        printf("Unable to build program\n");
-        return 0;
-    }
+        err = clBuildProgram(clPrg[device], 1, device_id, NULL, NULL, NULL);
+        if(err != CL_SUCCESS) {
+            size_t log_size;
+            clGetProgramBuildInfo(clPrg[device], device_id[0],
+                    CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+            char *program_log = (char *) calloc(log_size+1, sizeof(char));
+            clGetProgramBuildInfo(clPrg[device], device_id[0],
+                    CL_PROGRAM_BUILD_LOG, log_size+1, program_log, NULL);
+            fprintf(stderr, "%s", program_log);
+            free(program_log);
+            printf("Unable to build program\n");
+            return 0;
+        }
     
-    // Kernel
-    for (int device = 0; device < MAXGPU; device++) {
-        clKrn[device] = clCreateKernel(clPrg, "vecdot", &err);
+        // Kernel
+        clKrn[device] = clCreateKernel(clPrg[device], "vecdot", &err);
         if(err != CL_SUCCESS) {
             printf("Unable to create kernel\n");
             return 0;
         }
-    }
-    // Buffers
-    cl_mem_flags clOutBuffFlag = CL_MEM_READ_WRITE;
-    for (int device = 0; device < MAXGPU; device++) {
-        clMemOut[device] = clCreateBuffer(clCtx, clOutBuffFlag,
+
+        // Buffers
+        cl_mem_flags clOutBuffFlag = CL_MEM_READ_WRITE;
+        clMemOut[device] = clCreateBuffer(clCtx[device], clOutBuffFlag,
             sizeof(uint32_t)*BLK, NULL, &err);
         if(err != CL_SUCCESS) {
             printf("Unable to create buffer\n");
             return 0;
         }
-    }
+        }
     return 1;
 }
 
