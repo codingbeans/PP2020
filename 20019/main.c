@@ -186,6 +186,8 @@ void flush() {
 #pragma omp parallel for schedule(dynamic)
     for (int i=0; i<tc; i++) {
         ans[i] = execute(omp_get_thread_num(), N[i], keyA[i], keyB[i]);
+    }
+    for (int i=0; i<tc; i++) {
         printf("%u\n", ans[i]);
     }
 }
