@@ -89,8 +89,8 @@ int init(const char* filename) {
         }
         
         // Program
-        const char* source = &program_chars[0];
-        clPrg[device] = clCreateProgramWithSource(clCtx[device], 1, &source, 0, &err);
+        const char* source = program_chars;
+        clPrg[device] = clCreateProgramWithSource(clCtx[device], 1, &source, (size_t *) &length, &err);
         if(err != CL_SUCCESS) {
             printf("Unable to create program\n");
             return 0;
