@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include "utils.h"
-#define MAXGPU 1
+#define MAXGPU 2
 #define MAXN 16777216
 #define GPULOCAL 256
 #define BLK 256
