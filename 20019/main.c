@@ -7,6 +7,7 @@
 #define MAXN 16777216
 #define GPULOCAL 256
 #define BLK 256
+#define MAXCASE 100000
 
 // A lot thanks to Morris
 cl_context clCtx[MAXGPU];
@@ -17,22 +18,36 @@ cl_mem clMemOut[MAXGPU];
 
 int release() {
     fprintf(stderr, "Starting Cleanup ...\n\n");
-    for (int device = 0;device < MAXGPU; device++) {
-        if (clMemOut[device]) clReleaseMemObject(clMemOut[device]);
-        if (clKrn[device]) clReleaseKernel(clKrn[device]);
-        if (clQue[device]) clReleaseCommandQueue(clQue[device]);
-        if (clPrg[device]) clReleaseProgram(clPrg[device]);
-        if (clCtx[device]) clReleaseContext(clCtx[device]);
+    for (int i=0; i<MAXGPU; i++) {
+        if (clMemOut[i]) clReleaseMemObject(clMemOut[i]);
+        if (clKrn[i]) clReleaseKernel(clKrn[i]);
+        if (clPrg[i]) clReleaseProgram(clPrg[i]);
+        if (clQue[i]) clReleaseCommandQueue(clQue[i]);
+        if (clCtx[i]) clReleaseContext(clCtx[i]);
     }
     exit(0);
 }
 
 #define MAX_PROGRAM_LENGTH 1500 + 5
 
-int N;
-uint32_t keyA, keyB;
-char program_chars[MAXGPU][MAX_PROGRAM_LENGTH];
+char program_chars[MAX_PROGRAM_LENGTH];
 int init(const char* filename) {
+    FILE *fp;
+    char ch;
+    int length = 0;
+    if ((fp = fopen(filename, "r")) == NULL) {
+        printf("open file error!\n");
+        return 0;
+    }
+    
+    while((ch = getc(fp)) != EOF) {
+        program_chars[length++] = ch;
+    }
+
+    program_chars[length] = 0;
+    fclose(fp);
+    // Finish reading files
+
     // Platform
     cl_int err;
     cl_uint num;
@@ -56,47 +71,32 @@ int init(const char* filename) {
         printf("Unable to get device id");
         return 0;
     }
-
-    for (int device=0; device < MAXGPU; device++) {
-        FILE *fp;
-        char ch;
-        int length = 0;
-        if ((fp = fopen(filename, "r")) == NULL) {
-            printf("open file error!\n");
-            return 0;
-        }
-        
-        while((ch = getc(fp)) != EOF) {
-            program_chars[device][length++] = ch;
-        }
-
-        fclose(fp);
-        // Finish reading files
-
+	
+    // #pragma omp parallel for
+    for (int device = 0; device < MAXGPU; device++) {
         // Context
-        clCtx[device] = clCreateContext(NULL, 1, device_id + device, NULL, NULL, &err);
+        clCtx[device] = clCreateContext(NULL, 1, &device_id[device], NULL, NULL, &err);
         if(err != CL_SUCCESS) {
             printf("Unable to create context\n");
             return 0;
         }
-    
+        
         // Command queue
         clQue[device] = clCreateCommandQueue(clCtx[device], device_id[device], 0, &err);
         if(err != CL_SUCCESS) {
             printf("Unable to create command queue\n");
             return 0;
         }
-    
+        
         // Program
-        program_chars[device][length] = 0;
-        const char* source = &program_chars[device][0];
+        const char* source = &program_chars[0];
         clPrg[device] = clCreateProgramWithSource(clCtx[device], 1, &source, 0, &err);
         if(err != CL_SUCCESS) {
             printf("Unable to create program\n");
             return 0;
         }
 
-        err = clBuildProgram(clPrg[device], 1, device_id + device, NULL, NULL, NULL);
+        err = clBuildProgram(clPrg[device], 1, &device_id[device], NULL, NULL, NULL);
         if(err != CL_SUCCESS) {
             size_t log_size;
             clGetProgramBuildInfo(clPrg[device], device_id[device],
@@ -109,7 +109,7 @@ int init(const char* filename) {
             printf("Unable to build program\n");
             return 0;
         }
-    
+        
         // Kernel
         clKrn[device] = clCreateKernel(clPrg[device], "vecdot", &err);
         if(err != CL_SUCCESS) {
@@ -125,75 +125,80 @@ int init(const char* filename) {
             printf("Unable to create buffer\n");
             return 0;
         }
-        }
+    }
+
     return 1;
 }
 
-int execute() {
+int execute(int GPUID, int N, uint32_t keyA, uint32_t keyB) {
     cl_int err;
-    N++;
-    for (int device = 0; device < MAXGPU; device++) {
-        uint32_t L = N * device / MAXGPU ;
-        uint32_t R = N * (device + 1) / MAXGPU ;
-        err = clSetKernelArg(clKrn[device], 0, sizeof(cl_uint), (void *) &L);
-        if(err != CL_SUCCESS) {
-            printf("Unable to set kernel arg 0\n");
-            return 0;
-        }
-        err = clSetKernelArg(clKrn[device], 1, sizeof(cl_uint), (void *) &R);
-        if(err != CL_SUCCESS) {
-            printf("Unable to set kernel arg 1\n");
-            return 0;
-        }
-        err = clSetKernelArg(clKrn[device], 2, sizeof(cl_uint), (void *) &keyA);
-        if(err != CL_SUCCESS) {
-            printf("Unable to set kernel arg 2\n");
-            return 0;
-        }
-        err = clSetKernelArg(clKrn[device], 3, sizeof(cl_uint), (void *) &keyB);
-        if(err != CL_SUCCESS) {
-            printf("Unable to set kernel arg 3\n");
-            return 0;
-        }
-        err = clSetKernelArg(clKrn[device], 4, sizeof(cl_mem), (void *) &clMemOut[device]);
-        if(err != CL_SUCCESS) {
-            printf("Unable to set kernel arg 4\n");
-            return 0;
-        }
+	err = clSetKernelArg(clKrn[GPUID], 0, sizeof(cl_uint), (void *) &N);
+    if(err != CL_SUCCESS) {
+        printf("Unable to set kernel arg 0\n");
+        return 0;
     }
+    err = clSetKernelArg(clKrn[GPUID], 1, sizeof(cl_uint), (void *) &keyA);
+    if(err != CL_SUCCESS) {
+        printf("Unable to set kernel arg 1\n");
+        return 0;
+    }
+    err = clSetKernelArg(clKrn[GPUID], 2, sizeof(cl_uint), (void *) &keyB);
+    if(err != CL_SUCCESS) {
+        printf("Unable to set kernel arg 2\n");
+        return 0;
+    }
+    err = clSetKernelArg(clKrn[GPUID], 3, sizeof(cl_mem), (void *) &clMemOut);
+    if(err != CL_SUCCESS) {
+        printf("Unable to set kernel arg 3\n");
+        return 0;
+    }
+
     // Partition to blocks, each size 256
-    N = (N+GPULOCAL*BLK-1)/(BLK * MAXGPU);
+    N = (N+GPULOCAL*BLK-1)/(GPULOCAL*BLK)*GPULOCAL;
+    size_t globalOffset[] = {0};
+    size_t globalSize[] = {N};
+    size_t localSize[] = {GPULOCAL};
 
     uint32_t ZERO = 0;
-    for (int device = 0; device < MAXGPU; device ++) {
-        size_t globalOffset[] = {0};
-        size_t globalSize[] = {N};
-        size_t localSize[] = {GPULOCAL};
-        err = clEnqueueWriteBuffer(clQue[device], clMemOut[device], CL_TRUE, 0, sizeof(uint32_t), (void *) &ZERO, 0, NULL, NULL);
-        err = clEnqueueNDRangeKernel(clQue[device], clKrn[device], 1, globalOffset,
-                globalSize, localSize, 0, NULL, NULL);
-        if(err != CL_SUCCESS) {
-            printf("Unable to enqueue %d\n", device);
-            return 0;
-        }
+    err = clEnqueueWriteBuffer(clQue[GPUID], clMemOut[GPUID], CL_TRUE, 0, sizeof(uint32_t), (void *) &ZERO, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(clQue[GPUID], clKrn[GPUID], 1, globalOffset,
+            globalSize, localSize, 0, NULL, NULL);
+    if(err != CL_SUCCESS) {
+        printf("Unable to enqueue\n");
+        return 0;
     }
 
 	// -- read back
 	uint32_t sum = 0;
-    for (int device = 0; device < MAXGPU; device ++) {
-	    uint32_t now = 0;
-        clEnqueueReadBuffer(clQue[device], clMemOut[device], CL_TRUE, 0, sizeof(uint32_t), &now, 0, NULL, NULL);
-        sum += now;
-    }
-    printf("%u\n", sum);
+	clEnqueueReadBuffer(clQue[GPUID], clMemOut[GPUID], CL_TRUE, 0, sizeof(uint32_t), &sum, 0, NULL, NULL);
+    // printf("%u\n", sum);
 
-    return 1;
+    return sum;
+}
+
+int tc;
+int N[MAXCASE];
+uint32_t ans[MAXCASE];
+uint32_t keyA[MAXCASE], keyB[MAXCASE];
+void flush() {
+    if (tc == 0) return;
+	omp_set_num_threads(MAXGPU);
+#pragma omp parallel for schedule(dynamic)
+    for (int i=0; i<tc; i++) {
+        ans[i] = execute(omp_get_thread_num(), N[i], keyA[i], keyB[i]);
+        printf("%u\n", ans[i]);
+    }
 }
 
 int main() {
     init("vecdot.cl");
-    while(scanf("%d %u %u", &N, &keyA, &keyB) == 3) {
-        execute();
+    while(scanf("%d %u %u", &N[tc], &keyA[tc], &keyB[tc]) == 3) {
+        tc++;
+        if (tc == MAXCASE) {
+            flush();
+            tc = 0;
+        }
     }
+    flush();
     release();
 }
