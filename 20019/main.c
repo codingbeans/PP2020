@@ -149,7 +149,7 @@ int execute(int GPUID, int N, uint32_t keyA, uint32_t keyB) {
     }
     err = clSetKernelArg(clKrn[GPUID], 3, sizeof(cl_mem), (void *) &clMemOut);
     if(err != CL_SUCCESS) {
-        printf("Unable to set kernel arg 3\n");
+        printf("Unable to set kernel arg 3 GPU:%d\n", GPUID);
         return 0;
     }
 
