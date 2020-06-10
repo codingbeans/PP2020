@@ -31,14 +31,14 @@ template<typename T>
 struct tag2ans {
     typedef T argument_type;
     typedef T result_type;
-    const int32_t* cuPos;
-    tag2ans(const char* cuPos): cuPos(cuPos) {}
+    int* cuPos;
+    tag2ans(int* cuPos): cuPos(cuPos) {}
 //    __thrust_exec_check_disable__
    __host__ __device__ T operator()(const T &index) const { return index - cuPos[index];}
 };
 
 void labeling(const char *cuStr, int *cuPos, int strLen) {
-	thrust::tabulate(thrust::device, cuPos, cuPos+strLen, str2tag<int32_t>(cuStr));
+	thrust::tabulate(thrust::device, cuPos, cuPos+strLen, str2tag<int>(cuStr));
 	thrust::inclusive_scan(thrust::device, cuPos, cuPos+strLen, cuPos, thrust::maximum<int>());
-	thrust::tabulate(thrust::device, cuPos, cuPos+strLen, tag2ans<int32_t>(cuPos));
+	thrust::tabulate(thrust::device, cuPos, cuPos+strLen, tag2ans<int>(cuPos));
 }
