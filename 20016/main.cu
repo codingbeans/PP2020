@@ -11,6 +11,12 @@ namespace {
 }
  
 int main() {
+    int deviceCount = 0;
+    cudaGetDeviceCount(&deviceCount);
+    if (deviceCount <= 1) {
+        printf("error: invalid device chosen\n");
+        return 0;
+    }
     cudaSetDevice(1);
     static const int MAXN = 16777216<<1;
     static const int MAXTOKEN = 500;
