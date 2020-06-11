@@ -22,7 +22,7 @@ struct str2tag {
     typedef T result_type;
     const char* cuStr;
     str2tag(const char* cuStr): cuStr(cuStr) {}
-//    __thrust_exec_check_disable__
+   __thrust_exec_check_disable__
    __host__ __device__ T operator()(const T &index) const { return (cuStr[index] != ' ') ? -1 : index;}
 };
 
@@ -33,7 +33,7 @@ struct tag2ans {
     typedef T result_type;
     int* cuPos;
     tag2ans(int* cuPos): cuPos(cuPos) {}
-//    __thrust_exec_check_disable__
+   __thrust_exec_check_disable__
    __host__ __device__ T operator()(const T &index) const { return index - cuPos[index];}
 };
 
