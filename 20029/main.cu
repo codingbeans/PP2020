@@ -125,7 +125,7 @@ int main() {
 
     int deviceCount = 0;
     cudaGetDeviceCount(&deviceCount);
-	// omp_set_num_threads(deviceCount);
+	omp_set_num_threads(deviceCount);
     #pragma omp parallel for schedule(dynamic)
     for (int i=0; i<tc; i++) {
         cudaSetDevice(omp_get_thread_num() % deviceCount);
