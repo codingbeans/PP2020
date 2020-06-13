@@ -76,7 +76,7 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     D_ANS[tc][0] = signature(N, TMP[2]);
     D_ANS[tc][1] = signature(N, TMP[5]);
  
-    return 0;
+    return;
 }
 
 int N[MAXCASE];
