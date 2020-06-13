@@ -24,7 +24,7 @@ void multiply(int N, UINT* A, UINT* B, UINT* C) {
 }
 
 __global__
-void add(int N, UINT A*, UINT* B, UINT* C) {
+void add(int N, UINT* A, UINT* B, UINT* C) {
     int row = blockIdx.y*blockDim.y + threadIdx.y;
     int col = blockIdx.x*blockDim.x + threadIdx.x;
     // for (int i = 0; i < N; i++) {
