@@ -9,8 +9,8 @@
 
 __global__
 void multiply(int N, UINT* A, UINT* B, UINT* C) {
-    int row = blockIdx.y*blockDim.y + threadIdx.y;
-    int col = blockIdx.x*blockDim.x + threadIdx.x;
+    int row = blockIdx.x*blockDim.x + threadIdx.x;
+    int col = blockIdx.y*blockDim.y + threadIdx.y;
     printf("row=%d col=%d\n",row, col);
     // for (int i = 0; i < N; i++) {
     //     for (int j = 0; j < N; j++) {
@@ -26,8 +26,8 @@ void multiply(int N, UINT* A, UINT* B, UINT* C) {
 
 __global__
 void add(int N, UINT* A, UINT* B, UINT* C) {
-    int row = blockIdx.y*blockDim.y + threadIdx.y;
-    int col = blockIdx.x*blockDim.x + threadIdx.x;
+    int row = blockIdx.x*blockDim.x + threadIdx.x;
+    int col = blockIdx.y*blockDim.y + threadIdx.y;
     // for (int i = 0; i < N; i++) {
     //     for (int j = 0; j < N; j++)
     if (row < N && col < N) {
