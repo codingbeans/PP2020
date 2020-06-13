@@ -56,20 +56,21 @@ void signature(int N, UINT* A, UINT* ans) {
     *ans = h;
 }
 
-__device__ UINT D_ANS[MAXCASE][2];
 UINT ANS[MAXCASE][2];
 
 void solve(int tc, int N, UINT seedA, UINT seedB) {
     // UINT IN[2][MAXN][MAXN], TMP[6][MAXN][MAXN];
     // UINT *IN, *TMP;
-    UINT *D_IN[2], *D_TMP[6];
+    UINT *D_IN[2], *D_TMP[6], *D_ANS;
     // IN = (UINT*)malloc(2*MAXN*MAXN*sizeof(UINT));
     // TMP = (UINT*)malloc(6*MAXN*MAXN*sizeof(UINT));
 
+    cudaMalloc(D_ANS, 2*sizeof(UINT));
     #pragma omp parallel for 
     for (int i=0; i<2; i++) {
         cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
     }
+
     #pragma omp parallel for 
     for (int i=0; i<6; i++) {
         cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
@@ -107,11 +108,11 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     // {
         // D_ANS[tc][0] = signature(N, TMP[2]);
         // D_ANS[tc][1] = signature(N, TMP[5]);
-        signature<<<1, 1>>>(N, D_TMP[2], &D_ANS[tc][0]);
-        signature<<<1, 1>>>(N, D_TMP[5], &D_ANS[tc][1]);
+        signature<<<1, 1>>>(N, D_TMP[2], &D_ANS[0]);
+        signature<<<1, 1>>>(N, D_TMP[5], &D_ANS[1]);
     // }
  
-    cudaMemcpy(ANS[tc], D_ANS[tc], 2 * sizeof(UINT), cudaMemcpyDeviceToHost);
+    cudaMemcpy(ANS[tc], D_ANS, 2 * sizeof(UINT), cudaMemcpyDeviceToHost);
     return;
 }
 
