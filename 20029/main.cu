@@ -90,20 +90,27 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     // BA
     // multiply(N, IN[1], IN[0], TMP[1]);
     multiply<<<N, N>>>(N, D_IN[1], D_IN[0], D_TMP[1]);
+
+    cudaDeviceSynchronize();
     // AB+BA
     // add(N, TMP[0], TMP[1], TMP[2]);
     add<<<N, N>>>(N, D_TMP[0], D_TMP[1], D_TMP[2]);
     
+
     // ABA
     // multiply(N, TMP[0], IN[0], TMP[3]);
     multiply<<<N, N>>>(N, D_TMP[0], D_IN[0], D_TMP[3]);
     // BAB
     // multiply(N, TMP[1], IN[1], TMP[4]);
     multiply<<<N, N>>>(N, D_TMP[1], D_IN[1], D_TMP[4]);
+
+    cudaDeviceSynchronize();
     // ABA+BAB
     // add(N, TMP[3], TMP[4], TMP[5]);
     add<<<N, N>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
 
+
+    cudaDeviceSynchronize();
     // #pragma omp parallel
     // {
         // D_ANS[tc][0] = signature(N, TMP[2]);
