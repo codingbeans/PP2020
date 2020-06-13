@@ -72,7 +72,6 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     // BA
     multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_IN[1], D_IN[0], D_TMP[1]);
 
-    cudaDeviceSynchronize();
     // AB+BA
     add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[0], D_TMP[1], D_TMP[2]);
 
@@ -81,16 +80,21 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     // BAB
     multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[1], D_IN[1], D_TMP[4]);
 
-    cudaDeviceSynchronize();
     // ABA+BAB
     add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
 
-
-    cudaDeviceSynchronize();
     signature<<<1, 1>>>(N, D_TMP[2], &D_ANS[0]);
     signature<<<1, 1>>>(N, D_TMP[5], &D_ANS[1]);
  
     cudaMemcpy(ANS[tc], D_ANS, 2 * sizeof(UINT), cudaMemcpyDeviceToHost);
+
+    cudaFree(D_ANS);
+    for (int i=0; i<2; i++) {
+        cudaFree(D_IN[i]);
+    }
+    for (int i=0; i<6; i++) {
+        cudaFree(D_TMP[i]);
+    }
     return;
 }
 
