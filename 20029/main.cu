@@ -11,6 +11,7 @@ __global__
 void multiply(int N, UINT* A, UINT* B, UINT* C) {
     int row = blockIdx.y*blockDim.y + threadIdx.y;
     int col = blockIdx.x*blockDim.x + threadIdx.x;
+    printf("row=%d col=%d\n",row, col);
     // for (int i = 0; i < N; i++) {
     //     for (int j = 0; j < N; j++) {
     if (row < N && col < N) {
