@@ -64,7 +64,7 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
 
     dim3 threadsPerBlock(N, N);
     dim3 blocksPerGrid(1, 1);
-    if (N > 16){
+    if (N*N > 16){
         blocksPerGrid.x = 16;
         blocksPerGrid.y = 16;
         threadsPerBlock.x = ceil(double(N)/double(blocksPerGrid.x));
