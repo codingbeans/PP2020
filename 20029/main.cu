@@ -9,10 +9,10 @@
 
 __global__
 void multiply(int N, UINT* A, UINT* B, UINT* C) {
-    int row = blockIdx.x;
-    int col = threadIdx.x;
-    // int row = blockIdx.y*blockDim.y + threadIdx.y;
-    // int col = blockIdx.x*blockDim.x + threadIdx.x;
+    // int row = blockIdx.x;
+    // int col = threadIdx.x;
+    int row = blockIdx.y*blockDim.y + threadIdx.y;
+    int col = blockIdx.x*blockDim.x + threadIdx.x;
     // printf("row=%d col=%d\n",row, col);
     // for (int i = 0; i < N; i++) {
     //     for (int j = 0; j < N; j++) {
@@ -28,10 +28,10 @@ void multiply(int N, UINT* A, UINT* B, UINT* C) {
 
 __global__
 void add(int N, UINT* A, UINT* B, UINT* C) {
-    int row = blockIdx.x;
-    int col = threadIdx.x;
-    // int row = blockIdx.y*blockDim.y + threadIdx.y;
-    // int col = blockIdx.x*blockDim.x + threadIdx.x;
+    // int row = blockIdx.x;
+    // int col = threadIdx.x;
+    int row = blockIdx.y*blockDim.y + threadIdx.y;
+    int col = blockIdx.x*blockDim.x + threadIdx.x;
     // for (int i = 0; i < N; i++) {
     //     for (int j = 0; j < N; j++)
     if (row < N && col < N) {
@@ -64,22 +64,30 @@ void signature(int N, UINT* A, UINT* ans) {
 UINT ANS[MAXCASE][2];
 
 void solve(int tc, int N, UINT seedA, UINT seedB) {
-    // UINT IN[2][MAXN][MAXN], TMP[6][MAXN][MAXN];
-    // UINT *IN, *TMP;
     UINT *D_IN[2], *D_TMP[6], *D_ANS;
-    // IN = (UINT*)malloc(2*MAXN*MAXN*sizeof(UINT));
-    // TMP = (UINT*)malloc(6*MAXN*MAXN*sizeof(UINT));
 
-    cudaMalloc(&D_ANS, 2*sizeof(UINT));
-    #pragma omp parallel for 
-    for (int i=0; i<2; i++) {
-        cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
+    dim3 threadsPerBlock(N, N);
+    dim3 blocksPerGrid(1, 1);
+    if (N*N > 512) {
+        threadsPerBlock.x = 512;
+        threadsPerBlock.y = 512;
+        blocksPerGrid.x = (N + 511) / 512;
+        blocksPerGrid.x = (N + 511) / 512;
     }
 
-    #pragma omp parallel for 
-    for (int i=0; i<6; i++) {
-        cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
-    }
+    // #pragma omp parallel
+    // {
+        cudaMalloc(&D_ANS, 2*sizeof(UINT));
+        // #pragma omp for 
+        for (int i=0; i<2; i++) {
+            cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
+        }
+
+        // #pragma omp for 
+        for (int i=0; i<6; i++) {
+            cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
+    // }
+
     // #pragma omp parallel
     // {
         // rand_gen(seedA, N, IN[0]);
@@ -92,28 +100,28 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     cudaDeviceSynchronize();
     // AB
     // multiply(N, IN[0], IN[1], TMP[0]);
-    multiply<<<N, N>>>(N, D_IN[0], D_IN[1], D_TMP[0]);
+    multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_IN[0], D_IN[1], D_TMP[0]);
     // BA
     // multiply(N, IN[1], IN[0], TMP[1]);
-    multiply<<<N, N>>>(N, D_IN[1], D_IN[0], D_TMP[1]);
+    multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_IN[1], D_IN[0], D_TMP[1]);
 
     cudaDeviceSynchronize();
     // AB+BA
     // add(N, TMP[0], TMP[1], TMP[2]);
-    add<<<N, N>>>(N, D_TMP[0], D_TMP[1], D_TMP[2]);
+    add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[0], D_TMP[1], D_TMP[2]);
     
 
     // ABA
     // multiply(N, TMP[0], IN[0], TMP[3]);
-    multiply<<<N, N>>>(N, D_TMP[0], D_IN[0], D_TMP[3]);
+    multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[0], D_IN[0], D_TMP[3]);
     // BAB
     // multiply(N, TMP[1], IN[1], TMP[4]);
-    multiply<<<N, N>>>(N, D_TMP[1], D_IN[1], D_TMP[4]);
+    multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[1], D_IN[1], D_TMP[4]);
 
     cudaDeviceSynchronize();
     // ABA+BAB
     // add(N, TMP[3], TMP[4], TMP[5]);
-    add<<<N, N>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
+    add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
 
 
     cudaDeviceSynchronize();
