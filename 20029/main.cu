@@ -27,7 +27,7 @@ void add(int N, UINT* A, UINT* B, UINT* C) {
     }
 }
 
-__global__
+// __global__
 void rand_gen(UINT c, int N, UINT* A) {
     UINT x = 2, n = N*N;
     for (int i = 0; i < N; i++) {
@@ -38,7 +38,7 @@ void rand_gen(UINT c, int N, UINT* A) {
     }
 }
 
-__global__
+// __global__
 void signature(int N, UINT* A, UINT* ans) {
     UINT h = 0;
     for (int i = 0; i < N; i++) {
@@ -51,22 +51,28 @@ void signature(int N, UINT* A, UINT* ans) {
 UINT ANS[MAXCASE][2];
 
 void solve(int tc, int N, UINT seedA, UINT seedB) {
+    UINT *IN[2], *TMP[2];
     UINT *D_IN[2], *D_TMP[6], *D_ANS;
 
     cudaMalloc(&D_ANS, 2*sizeof(UINT));
     for (int i=0; i<2; i++) {
+        IN[i] = (UINT*)malloc(N*N*sizeof(UINT));
+        TMP[i] = (UINT*)malloc(N*N*sizeof(UINT));
         cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
     }
     for (int i=0; i<6; i++) {
         cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
     }
-    rand_gen<<<1, 1>>>(seedA, N, D_IN[0]);
-    rand_gen<<<1, 1>>>(seedB, N, D_IN[1]);
+    rand_gen(seedA, N, IN[0]);
+    rand_gen(seedB, N, IN[1]);
+    cudaMemcpy(D_IN[0], IN[0], N*N*sizeof(UINT), cudaMemcpyHostToDevice);
+    cudaMemcpy(D_IN[1], IN[1], N*N*sizeof(UINT), cudaMemcpyHostToDevice);
+    // rand_gen<<<1, 1>>>(seedA, N, D_IN[0]);
+    // rand_gen<<<1, 1>>>(seedB, N, D_IN[1]);
 
     dim3 threadsPerBlock(BLOCKSIZE, BLOCKSIZE);
     dim3 blocksPerGrid((N + BLOCKSIZE - 1) / BLOCKSIZE, (N + BLOCKSIZE -1) / BLOCKSIZE);
 
-    cudaDeviceSynchronize();
     // AB
     multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_IN[0], D_IN[1], D_TMP[0]);
     // BA
@@ -83,13 +89,19 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     // ABA+BAB
     add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
 
-    signature<<<1, 1>>>(N, D_TMP[2], &D_ANS[0]);
-    signature<<<1, 1>>>(N, D_TMP[5], &D_ANS[1]);
+    cudaMemcpy(TMP[0], D_TMP[2], N*N*sizeof(UINT), cudaMemcpyDeviceToHost);
+    cudaMemcpy(TMP[1], D_TMP[5], N*N*sizeof(UINT), cudaMemcpyDeviceToHost);
+    signature(N, TMP[0], &ANS[tc][0]);
+    signature(N, TMP[1], &ANS[tc][1]);
+    // signature<<<1, 1>>>(N, D_TMP[2], &D_ANS[0]);
+    // signature<<<1, 1>>>(N, D_TMP[5], &D_ANS[1]);
  
-    cudaMemcpy(ANS[tc], D_ANS, 2 * sizeof(UINT), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(ANS[tc], D_ANS, 2 * sizeof(UINT), cudaMemcpyDeviceToHost);
 
     cudaFree(D_ANS);
     for (int i=0; i<2; i++) {
+        free(IN[i]);
+        free(TMP[i]);
         cudaFree(D_IN[i]);
     }
     for (int i=0; i<6; i++) {
