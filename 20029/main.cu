@@ -84,6 +84,7 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     // }
 
 
+    cudaDeviceSynchronize();
     // AB
     // multiply(N, IN[0], IN[1], TMP[0]);
     multiply<<<N, N>>>(N, D_IN[0], D_IN[1], D_TMP[0]);
