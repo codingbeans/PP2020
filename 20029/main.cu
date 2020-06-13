@@ -65,7 +65,7 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     // IN = (UINT*)malloc(2*MAXN*MAXN*sizeof(UINT));
     // TMP = (UINT*)malloc(6*MAXN*MAXN*sizeof(UINT));
 
-    cudaMalloc(D_ANS, 2*sizeof(UINT));
+    cudaMalloc(&D_ANS, 2*sizeof(UINT));
     #pragma omp parallel for 
     for (int i=0; i<2; i++) {
         cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
