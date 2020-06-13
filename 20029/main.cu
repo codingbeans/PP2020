@@ -86,7 +86,7 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
         // #pragma omp for 
         for (int i=0; i<6; i++) {
             cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
-    // }
+        }
 
     // #pragma omp parallel
     // {
