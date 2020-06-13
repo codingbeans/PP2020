@@ -57,7 +57,6 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     cudaMalloc(&D_ANS, 2*sizeof(UINT));
     for (int i=0; i<2; i++) {
         IN[i] = (UINT*)malloc(N*N*sizeof(UINT));
-        TMP[i] = (UINT*)malloc(N*N*sizeof(UINT));
         cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
     }
     for (int i=0; i<6; i++) {
@@ -92,6 +91,9 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     // ABA+BAB
     add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
 
+    for (int i=0; i<2; i++) {
+        TMP[i] = (UINT*)malloc(N*N*sizeof(UINT));
+    }
     cudaMemcpy(TMP[0], D_TMP[2], N*N*sizeof(UINT), cudaMemcpyDeviceToHost);
     cudaMemcpy(TMP[1], D_TMP[5], N*N*sizeof(UINT), cudaMemcpyDeviceToHost);
     signature(N, TMP[0], &ANS[tc][0]);
