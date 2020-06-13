@@ -62,13 +62,18 @@ UINT ANS[MAXCASE][2];
 void solve(int tc, int N, UINT seedA, UINT seedB) {
     // UINT IN[2][MAXN][MAXN], TMP[6][MAXN][MAXN];
     // UINT *IN, *TMP;
-    UINT *D_IN, *D_TMP;
+    UINT *D_IN[2], *D_TMP[6];
     // IN = (UINT*)malloc(2*MAXN*MAXN*sizeof(UINT));
     // TMP = (UINT*)malloc(6*MAXN*MAXN*sizeof(UINT));
 
-    cudaMalloc(&D_IN, 2*N*N*sizeof(UINT));
-    cudaMalloc(&D_TMP, 6*N*N*sizeof(UINT));
-
+    #pragma omp parallel for 
+    for (int i=0; i<2; i++) {
+        cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
+    }
+    #pragma omp parallel for 
+    for (int i=0; i<6; i++) {
+        cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
+    }
     // #pragma omp parallel
     // {
         // rand_gen(seedA, N, IN[0]);
