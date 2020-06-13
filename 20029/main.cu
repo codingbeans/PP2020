@@ -56,32 +56,41 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     for (int i=0; i<2; i++) {
         cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
     }
-
     for (int i=0; i<6; i++) {
         cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
     }
     rand_gen<<<1, 1>>>(seedA, N, D_IN[0]);
     rand_gen<<<1, 1>>>(seedB, N, D_IN[1]);
 
+    // declare the number of blocks per grid and the number of threads per block
+    // use 1 to 512 threads per block
+    dim3 threadsPerBlock(1, 1);
+    dim3 blocksPerGrid(N, N);
+        if (N*N > 512){
+            blocksPerGrid.x = 512;
+            blocksPerGrid.y = 512;
+            threadsPerBlock.x = ceil(double(N)/double(threadsPerBlock.x));
+            threadsPerBlock.y = ceil(double(N)/double(threadsPerBlock.y));
+        }
 
     cudaDeviceSynchronize();
     // AB
-    multiply<<<N, N>>>(N, D_IN[0], D_IN[1], D_TMP[0]);
+    multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_IN[0], D_IN[1], D_TMP[0]);
     // BA
-    multiply<<<N, N>>>(N, D_IN[1], D_IN[0], D_TMP[1]);
+    multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_IN[1], D_IN[0], D_TMP[1]);
 
     cudaDeviceSynchronize();
     // AB+BA
-    add<<<N, N>>>(N, D_TMP[0], D_TMP[1], D_TMP[2]);
+    add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[0], D_TMP[1], D_TMP[2]);
 
     // ABA
-    multiply<<<N, N>>>(N, D_TMP[0], D_IN[0], D_TMP[3]);
+    multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[0], D_IN[0], D_TMP[3]);
     // BAB
-    multiply<<<N, N>>>(N, D_TMP[1], D_IN[1], D_TMP[4]);
+    multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[1], D_IN[1], D_TMP[4]);
 
     cudaDeviceSynchronize();
     // ABA+BAB
-    add<<<N, N>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
+    add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
 
 
     cudaDeviceSynchronize();
@@ -104,7 +113,7 @@ int main() {
     int deviceCount = 0;
     cudaGetDeviceCount(&deviceCount);
 	omp_set_num_threads(deviceCount);
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for (int i=0; i<tc; i++) {
         cudaSetDevice(omp_get_thread_num());
         solve(i, N[i], seedA[i], seedB[i]);
