@@ -5,8 +5,6 @@
 #define MAXN 1024
 #define MAXCASE 512
 
-#define DEBUG
-
 __global__
 void multiply(int N, UINT* A, UINT* B, UINT* C) {
     // int row = blockIdx.x;
@@ -14,16 +12,12 @@ void multiply(int N, UINT* A, UINT* B, UINT* C) {
     int row = blockIdx.y*blockDim.y + threadIdx.y;
     int col = blockIdx.x*blockDim.x + threadIdx.x;
     // printf("row=%d col=%d\n",row, col);
-    // for (int i = 0; i < N; i++) {
-    //     for (int j = 0; j < N; j++) {
     if (row < N && col < N) {
-            UINT sum = 0;    // overflow, let it go.
-            for (int k = 0; k < N; k++)
-                sum += A[row * N + k] * B[k * N + col];
-            C[row * N + col] = sum;
+        UINT sum = 0;    // overflow, let it go.
+        for (int k = 0; k < N; k++)
+            sum += A[row * N + k] * B[k * N + col];
+        C[row * N + col] = sum;
     }
-    //     }
-    // }
 }
 
 __global__
@@ -32,12 +26,9 @@ void add(int N, UINT* A, UINT* B, UINT* C) {
     // int col = threadIdx.x;
     int row = blockIdx.y*blockDim.y + threadIdx.y;
     int col = blockIdx.x*blockDim.x + threadIdx.x;
-    // for (int i = 0; i < N; i++) {
-    //     for (int j = 0; j < N; j++)
     if (row < N && col < N) {
-            C[row * N + col] = A[row * N + col] + B[row * N + col];
+        C[row * N + col] = A[row * N + col] + B[row * N + col];
     }
-    // }
 }
 
 __global__
@@ -51,89 +42,62 @@ void rand_gen(UINT c, int N, UINT* A) {
     }
 }
 
-__global__
-void signature(int N, UINT* A, UINT* ans) {
+UINT signature(int N, UINT* A) {
     UINT h = 0;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++)
             h = (h + A[i * N + j]) * 2654435761LU;
     }
-    *ans = h;
+    return h;
 }
 
 UINT ANS[MAXCASE][2];
 
 void solve(int tc, int N, UINT seedA, UINT seedB) {
-    UINT *D_IN[2], *D_TMP[6], *D_ANS;
+    UINT *D_IN[2], *D_TMP[6];
+
+    for (int i=0; i<2; i++) {
+        cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
+    }
+    for (int i=0; i<6; i++) {
+        cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
+    }
+
+    rand_gen<<<1, 1>>>(seedA, N, D_IN[0]);
+    rand_gen<<<1, 1>>>(seedB, N, D_IN[1]);
 
     dim3 threadsPerBlock(N, N);
     dim3 blocksPerGrid(1, 1);
     if (N*N > 512) {
         threadsPerBlock.x = 512;
         threadsPerBlock.y = 512;
-        blocksPerGrid.x = (N + 511) / 512;
-        blocksPerGrid.x = (N + 511) / 512;
+        blocksPerGrid.x = ceil(double(N)/double(threadsPerBlock.x));
+        blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
     }
-
-    // #pragma omp parallel
-    // {
-        cudaMalloc(&D_ANS, 2*sizeof(UINT));
-        // #pragma omp for 
-        for (int i=0; i<2; i++) {
-            cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
-        }
-
-        // #pragma omp for 
-        for (int i=0; i<6; i++) {
-            cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
-        }
-
-    // #pragma omp parallel
-    // {
-        // rand_gen(seedA, N, IN[0]);
-        // rand_gen(seedB, N, IN[1]);
-        rand_gen<<<1, 1>>>(seedA, N, D_IN[0]);
-        rand_gen<<<1, 1>>>(seedB, N, D_IN[1]);
-    // }
-
 
     cudaDeviceSynchronize();
     // AB
-    // multiply(N, IN[0], IN[1], TMP[0]);
     multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_IN[0], D_IN[1], D_TMP[0]);
     // BA
-    // multiply(N, IN[1], IN[0], TMP[1]);
     multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_IN[1], D_IN[0], D_TMP[1]);
 
     cudaDeviceSynchronize();
     // AB+BA
-    // add(N, TMP[0], TMP[1], TMP[2]);
     add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[0], D_TMP[1], D_TMP[2]);
-    
-
     // ABA
-    // multiply(N, TMP[0], IN[0], TMP[3]);
     multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[0], D_IN[0], D_TMP[3]);
     // BAB
-    // multiply(N, TMP[1], IN[1], TMP[4]);
     multiply<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[1], D_IN[1], D_TMP[4]);
 
     cudaDeviceSynchronize();
     // ABA+BAB
-    // add(N, TMP[3], TMP[4], TMP[5]);
     add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
 
 
     cudaDeviceSynchronize();
-    // #pragma omp parallel
-    // {
-        // D_ANS[tc][0] = signature(N, TMP[2]);
-        // D_ANS[tc][1] = signature(N, TMP[5]);
-        signature<<<1, 1>>>(N, D_TMP[2], &D_ANS[0]);
-        signature<<<1, 1>>>(N, D_TMP[5], &D_ANS[1]);
-    // }
- 
-    cudaMemcpy(ANS[tc], D_ANS, 2 * sizeof(UINT), cudaMemcpyDeviceToHost);
+
+    ANS[tc][0] = signature(N, D_TMP[2]);
+    ANS[tc][1] = signature(N, D_TMP[5]);
     return;
 }
 
@@ -148,8 +112,9 @@ int main() {
 
     int deviceCount = 0;
     cudaGetDeviceCount(&deviceCount);
+
 	omp_set_num_threads(deviceCount);
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for (int i=0; i<tc; i++) {
         cudaSetDevice(omp_get_thread_num());
         solve(i, N[i], seedA[i], seedB[i]);
