@@ -8,7 +8,7 @@
 #define DEBUG
 
 __global__
-void multiply(int N, UINT A[][MAXN], UINT B[][MAXN], UINT C[][MAXN]) {
+void multiply(int N, UINT* A, UINT* B, UINT* C) {
     int row = blockIdx.y*blockDim.y + threadIdx.y;
     int col = blockIdx.x*blockDim.x + threadIdx.x;
     // for (int i = 0; i < N; i++) {
@@ -24,7 +24,7 @@ void multiply(int N, UINT A[][MAXN], UINT B[][MAXN], UINT C[][MAXN]) {
 }
 
 __global__
-void add(int N, UINT A[][MAXN], UINT B[][MAXN], UINT C[][MAXN]) {
+void add(int N, UINT A*, UINT* B, UINT* C) {
     int row = blockIdx.y*blockDim.y + threadIdx.y;
     int col = blockIdx.x*blockDim.x + threadIdx.x;
     // for (int i = 0; i < N; i++) {
@@ -47,14 +47,13 @@ void rand_gen(UINT c, int N, UINT A[][MAXN]) {
 }
 
 __global__
-UINT signature(int N, UINT A[][MAXN], UINT* ans) {
+void signature(int N, UINT* A, UINT* ans) {
     UINT h = 0;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++)
             h = (h + A[i][j]) * 2654435761LU;
     }
     *ans = h;
-    return h;
 }
 
 __device__ UINT D_ANS[MAXCASE][2];
