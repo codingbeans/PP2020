@@ -7,8 +7,8 @@
 
 __global__
 void multiply(int N, UINT* A, UINT* B, UINT* C) {
-    int row = blockIdx.x;
-    int col = threadIdx.x;
+    int row = blockIdx.y*blockDim.y+threadIdx.y;
+    int col = blockIdx.x*blockDim.x+threadIdx.x;
     if (row < N && col < N) {
         UINT sum = 0;    // overflow, let it go.
         for (int k = 0; k < N; k++)
@@ -19,8 +19,8 @@ void multiply(int N, UINT* A, UINT* B, UINT* C) {
 
 __global__
 void add(int N, UINT* A, UINT* B, UINT* C) {
-    int row = blockIdx.x;
-    int col = threadIdx.x;
+    int row = blockIdx.y*blockDim.y+threadIdx.y;
+    int col = blockIdx.x*blockDim.x+threadIdx.x;
     if (row < N && col < N) {
         C[row * N + col] = A[row * N + col] + B[row * N + col];
     }
