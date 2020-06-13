@@ -67,6 +67,9 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     rand_gen(seedB, N, IN[1]);
     cudaMemcpy(D_IN[0], IN[0], N*N*sizeof(UINT), cudaMemcpyHostToDevice);
     cudaMemcpy(D_IN[1], IN[1], N*N*sizeof(UINT), cudaMemcpyHostToDevice);
+    for (int i=0; i<2; i++) {
+        free(IN[i]);
+    }
     // rand_gen<<<1, 1>>>(seedA, N, D_IN[0]);
     // rand_gen<<<1, 1>>>(seedB, N, D_IN[1]);
 
