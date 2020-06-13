@@ -69,8 +69,8 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
         if (N*N > 512){
             blocksPerGrid.x = 512;
             blocksPerGrid.y = 512;
-            threadsPerBlock.x = ceil(double(N)/double(threadsPerBlock.x));
-            threadsPerBlock.y = ceil(double(N)/double(threadsPerBlock.y));
+            threadsPerBlock.x = ceil(double(N)/double(blocksPerGrid.x));
+            threadsPerBlock.y = ceil(double(N)/double(blocksPerGrid.y));
         }
 
     cudaDeviceSynchronize();
