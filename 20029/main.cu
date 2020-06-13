@@ -96,7 +96,7 @@ int main() {
     }
 
     for (int i=0; i<tc; i++) {
-        printf("%u\n", D_ANS[i][0], D_ANS[i][1]);
+        printf("%u\n%u\n", D_ANS[i][0], D_ANS[i][1]);
     }
     return 0;
 }
