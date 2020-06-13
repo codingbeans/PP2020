@@ -65,8 +65,8 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     dim3 threadsPerBlock(N, N);
     dim3 blocksPerGrid(1, 1);
     if (N*N > 512){
-        threadsPerBlock.x = 32;
-        threadsPerBlock.y = 16;
+        threadsPerBlock.x = 512;
+        threadsPerBlock.y = 512;
         blocksPerGrid.x = ceil(double(N)/double(threadsPerBlock.x));
         blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
     }
@@ -89,7 +89,6 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     cudaDeviceSynchronize();
     // ABA+BAB
     add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
-
 
     cudaDeviceSynchronize();
     signature<<<1, 1>>>(N, D_TMP[2], &D_ANS[0]);
