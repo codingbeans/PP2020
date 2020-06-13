@@ -16,8 +16,8 @@ void multiply(int N, UINT* A, UINT* B, UINT* C) {
     if (row < N && col < N) {
             UINT sum = 0;    // overflow, let it go.
             for (int k = 0; k < N; k++)
-                sum += A[row][k] * B[k][col];
-            C[row][col] = sum;
+                sum += A[row * N + k] * B[k * N + col];
+            C[row * N + col] = sum;
     }
     //     }
     // }
@@ -30,18 +30,18 @@ void add(int N, UINT A*, UINT* B, UINT* C) {
     // for (int i = 0; i < N; i++) {
     //     for (int j = 0; j < N; j++)
     if (row < N && col < N) {
-            C[row][col] = A[row][col] + B[row][col];
+            C[row * N + col] = A[row * N + col] + B[row * N + col];
     }
     // }
 }
 
 __global__
-void rand_gen(UINT c, int N, UINT A[][MAXN]) {
+void rand_gen(UINT c, int N, UINT* A) {
     UINT x = 2, n = N*N;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             x = (x * x + c + i + j)%n;
-            A[i][j] = x;
+            A[i * N + j] = x;
         }
     }
 }
@@ -51,7 +51,7 @@ void signature(int N, UINT* A, UINT* ans) {
     UINT h = 0;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++)
-            h = (h + A[i][j]) * 2654435761LU;
+            h = (h + A[i * N + j]) * 2654435761LU;
     }
     *ans = h;
 }
