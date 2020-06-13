@@ -4,6 +4,7 @@
 #define UINT uint32_t
 #define MAXN 1024
 #define MAXCASE 512
+#define BLOCKSIZE 16
 
 __global__
 void multiply(int N, UINT* A, UINT* B, UINT* C) {
@@ -62,8 +63,8 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     rand_gen<<<1, 1>>>(seedA, N, D_IN[0]);
     rand_gen<<<1, 1>>>(seedB, N, D_IN[1]);
 
-    dim3 threadsPerBlock(512);
-    dim3 blocksPerGrid(N*N/512);
+    dim3 threadsPerBlock(BLOCKSIZE, BLOCKSIZE);
+    dim3 blocksPerGrid((N + BLOCKSIZE - 1) / BLOCKSIZE, (N + BLOCKSIZE -1) / BLOCKSIZE);
 
     cudaDeviceSynchronize();
     // AB
@@ -83,6 +84,7 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     cudaDeviceSynchronize();
     // ABA+BAB
     add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
+
 
     cudaDeviceSynchronize();
     signature<<<1, 1>>>(N, D_TMP[2], &D_ANS[0]);
