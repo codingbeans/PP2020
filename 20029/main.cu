@@ -64,11 +64,11 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
 
     dim3 threadsPerBlock(N, N);
     dim3 blocksPerGrid(1, 1);
-    if (N*N > 16){
-        blocksPerGrid.x = 16;
-        blocksPerGrid.y = 16;
-        threadsPerBlock.x = ceil(double(N)/double(blocksPerGrid.x));
-        threadsPerBlock.y = ceil(double(N)/double(blocksPerGrid.y));
+    if (N*N > 512){
+        threadsPerBlock.x = 32;
+        threadsPerBlock.y = 16;
+        blocksPerGrid.x = ceil(double(N)/double(threadsPerBlock.x));
+        blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
     }
 
     cudaDeviceSynchronize();
