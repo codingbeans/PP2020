@@ -42,23 +42,26 @@ void rand_gen(UINT c, int N, UINT* A) {
     }
 }
 
-UINT signature(int N, UINT* A) {
+__global__
+void signature(int N, UINT* A, UINT* ans) {
     UINT h = 0;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++)
             h = (h + A[i * N + j]) * 2654435761LU;
     }
-    return h;
+    *ans = h;
 }
 
 UINT ANS[MAXCASE][2];
 
 void solve(int tc, int N, UINT seedA, UINT seedB) {
-    UINT *D_IN[2], *D_TMP[6];
+    UINT *D_IN[2], *D_TMP[6], *D_ANS;
 
+    cudaMalloc(&D_ANS, 2*sizeof(UINT));
     for (int i=0; i<2; i++) {
         cudaMalloc(&D_IN[i], N*N*sizeof(UINT));
     }
+
     for (int i=0; i<6; i++) {
         cudaMalloc(&D_TMP[i], N*N*sizeof(UINT));
     }
@@ -93,11 +96,11 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     // ABA+BAB
     add<<<blocksPerGrid, threadsPerBlock>>>(N, D_TMP[3], D_TMP[4], D_TMP[5]);
 
-
     cudaDeviceSynchronize();
-
-    ANS[tc][0] = signature(N, D_TMP[2]);
-    ANS[tc][1] = signature(N, D_TMP[5]);
+    signature<<<1, 1>>>(N, D_TMP[2], &D_ANS[0]);
+    signature<<<1, 1>>>(N, D_TMP[5], &D_ANS[1]);
+ 
+    cudaMemcpy(ANS[tc], D_ANS, 2 * sizeof(UINT), cudaMemcpyDeviceToHost);
     return;
 }
 
