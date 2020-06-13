@@ -103,7 +103,6 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
 
     cudaFree(D_ANS);
     for (int i=0; i<2; i++) {
-        free(IN[i]);
         free(TMP[i]);
         cudaFree(D_IN[i]);
     }
