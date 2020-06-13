@@ -11,7 +11,7 @@ void multiply(int N, UINT* A, UINT* B, UINT* C) {
     int row = blockIdx.y*blockDim.y+threadIdx.y;
     int col = blockIdx.x*blockDim.x+threadIdx.x;
     if (row < N && col < N) {
-        UINT sum = 0;    // overflow, let it go.
+        UINT sum = 0;
         for (int k = 0; k < N; k++)
             sum += A[row * N + k] * B[k * N + col];
         C[row * N + col] = sum;
@@ -109,10 +109,10 @@ int main() {
 
     int deviceCount = 0;
     cudaGetDeviceCount(&deviceCount);
-	omp_set_num_threads(deviceCount);
+	// omp_set_num_threads(deviceCount);
     #pragma omp parallel for schedule(dynamic)
     for (int i=0; i<tc; i++) {
-        cudaSetDevice(omp_get_thread_num());
+        cudaSetDevice(omp_get_thread_num() % deviceCount);
         solve(i, N[i], seedA[i], seedB[i]);
     }
 
