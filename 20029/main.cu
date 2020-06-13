@@ -62,12 +62,10 @@ void solve(int tc, int N, UINT seedA, UINT seedB) {
     rand_gen<<<1, 1>>>(seedA, N, D_IN[0]);
     rand_gen<<<1, 1>>>(seedB, N, D_IN[1]);
 
-    // declare the number of blocks per grid and the number of threads per block
-    // use 1 to 512 threads per block
-    dim3 threadsPerBlock(1, 1);
-    dim3 blocksPerGrid(N, N);
-    if (N*N > 512){
-        blocksPerGrid.x = 32;
+    dim3 threadsPerBlock(N, N);
+    dim3 blocksPerGrid(1, 1);
+    if (N > 16){
+        blocksPerGrid.x = 16;
         blocksPerGrid.y = 16;
         threadsPerBlock.x = ceil(double(N)/double(blocksPerGrid.x));
         threadsPerBlock.y = ceil(double(N)/double(blocksPerGrid.y));
