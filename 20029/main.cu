@@ -4,7 +4,7 @@
 #define UINT uint32_t
 #define MAXN 1024
 #define MAXCASE 512
-#define MAXGPU 2
+#define MAXGPU 1
 
 #define DEBUG
 
