@@ -21,7 +21,7 @@ public class Average extends Configured implements Tool {
 				// TODO: Task I, transform a line into <Key, IntPair> as you wish
 				String name = stk.nextToken();
 				int score = Integer.parseInt(stk.nextToken());
-				output.collect(name, new IntPair(score, 1));
+				output.collect(new Text(name), new IntPair(score, 1));
 			}
 		}
 	}
