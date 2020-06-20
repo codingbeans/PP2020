@@ -1,4 +1,4 @@
-INPUT = /user/hadoop/avg-input/avg-input.small
+INPUT = /user/hadoop_admin/avg-input/avg-input.small
 OUTPUT = avg-output
 
 JAR = Average.jar
