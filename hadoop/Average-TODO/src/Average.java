@@ -33,6 +33,14 @@ public class Average extends Configured implements Tool {
 				throws IOException {
 			// TODO: Task II, collect the part of Iterator<IntPair>, 
 			// 			and then store them into <Key, IntPair>
+			int fraction = 0;
+			int denominator = 0;
+			while(values.hasNext()) {
+				IntPair pair = values.next();
+				fraction += pair.getFirst();
+				denominator += pair.getSecond();
+			}
+			output.collect(key, new IntPair(fraction, denominator));
 		}
 	}
 
