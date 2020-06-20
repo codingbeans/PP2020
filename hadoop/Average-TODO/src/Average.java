@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class Average extends Configured implements Tool {
-
 	public static class Map extends MapReduceBase
 			implements Mapper<LongWritable, Text, Text, IntPair> {
 		public void map(LongWritable key, Text value,
@@ -20,6 +19,9 @@ public class Average extends Configured implements Tool {
 
 			while (stk.hasMoreTokens()) {
 				// TODO: Task I, transform a line into <Key, IntPair> as you wish
+				String name = stk.nextToken();
+				int score = Integer.parseInt(stk.nextToken());
+				output.collect(name, new IntPair(score, 1));
 			}
 		}
 	}
@@ -40,6 +42,14 @@ public class Average extends Configured implements Tool {
 				OutputCollector<Text, DoubleWritable> output, Reporter reporter)
 				throws IOException {
 			// TODO: Task I, transform <Key, Iterator<IntPair>> into <Key, Double>
+			int fraction = 0;
+			int denominator = 0;
+			while(values.hasNext()) {
+				IntPair pair = values.next();
+				fraction += pair.getFirst();
+				denominator += pair.getSecond();
+			}
+			output.collect(key, new DoubleWritable((double) fraction / (double) denominator));
 		}
 	}
 
